@@ -1,18 +1,20 @@
-[![Build Status](https://travis-ci.org/andycasey/smhr.svg?branch=master)](https://travis-ci.org/andycasey/smhr)
-
-Spectroscopy Made Harder
+LESSPayne
 ------------------------
-Gotta pay back that tech debt.
-
+Combines Spectroscopy Made Harder (smhr) with Payne4MIKE (called Payne4LESS in this package)
 
 Authors
 -------
- - Andrew R. Casey (Monash)
  - Alex Ji (University of Chicago)
+ - Andrew R. Casey (Monash)
+ - Yuan-Sen Ting (ANU)
  - Erika Holmbeck (Carnegie Observatories)
 
 Installation
 ------------
+
+It is strongly recommended to use anaconda and create a new environment.
+Payne4LESS has very few requirements, but SMHR uses the Pyside2 GUI library.
+GUIs are rather fickle with versions so generally it is recommended 
 
 * Get anaconda https://www.anaconda.com/
 
@@ -50,8 +52,12 @@ Note: you can also open smhr with `python` or `ipython`, but the menu bar may no
 It appears you can fix this by clicking outside SMHR then clicking back in. But using `pythonw` is better.
 Details: https://stackoverflow.com/questions/48738805/mac-pyqt5-menubar-not-active-until-unfocusing-refocusing-the-app
 
-* Install moog17scat (see below) and add it to your path.
+Once this works, it is recommended you update your shell configuration to launch the GUI, e.g.
+```
+alias runsmhr='conda activate smhr-py3; cd ~/smhr/smh/gui; pythonw __main__.py'
+```
 
+* Install moog17scat (see below) and add it to your path.
 
 * Some installation notes for Linux/Debian. It takes a very long time to install pyside2 (hours?) so be patient. Thanks to Shivani Shah and Terese Hansen for this information.
 ```
@@ -66,7 +72,6 @@ Activate environment:
 Install pyside2:
 > conda install -c conda-forge pyside2=5.13.2
 
-
 Install yaml
 > conda install -c conda-forge yaml
 
@@ -77,7 +82,7 @@ Get smhr:
 
 Start smhr:
 > cd smh/gui
-> ipython __main__.py
+> pythonw __main__.py
 ```
 
 MOOG
