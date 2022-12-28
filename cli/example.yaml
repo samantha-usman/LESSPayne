@@ -1,0 +1,77 @@
+spectrum_fname: TODO
+payne4less_fname: TODO
+NN_file: NN_normalized_spectra_float16_fixwave.npz
+# parameters for automatic velocity finding
+autovelocity:
+  template_spectrum_fname: TODO
+  wavelength_region_min: 5150
+  wavelength_region_max: 5200
+# parameters for automatic payne4less fit
+payne4less:
+  # automatically find the velocity from xcor
+  initial_velocity: null
+  # restrict the wavelength range
+  # the full allowed range is 3500-10000A
+  wmin: 4800
+  wmax: 7000
+  mask_list:
+  - - 6276
+    - 6320
+  - - 6866
+    - 6881
+  - - 6883
+    - 6962
+  - - 6985
+    - 7070
+  rv_target_wavelengths:
+  - 5183
+  - 4861
+  initial_parameters:
+    Teff: 4500
+    logg: 1.5
+    MH:   -2.0
+    aFe:  0.4
+  save_figures: 1
+run_normalization:
+  # threshold for deciding whether to mask a line in the Payne model
+  mask_sigma: 2.0
+  # parameters for growing the mask size a bit
+  mask_smooth: 2
+  mask_thresh: 0.15
+  # maximum fraction of masked pixels per order; increases mask_sigma by 0.5 until reached
+  max_mask_frac: 0.8
+  # minimum fraction of unmasked pixels/knot; increases knot_spacing by 2 until reached
+  min_frac_per_knot: 0.05
+  # blue and red trim in pixels
+  blue_trim: 30
+  red_trim: 30
+  # normalization kwargs
+  continuum_spline_order: 3
+  continuum_max_iterations: 5
+  # Flag to output a normalization figure
+  save_figure: 1
+run_eqw_fit:
+  max_fwhm: 1.0
+  eqw_linelist_fname: TODO
+  # threshold for deciding whether to mask a line in the Payne model
+  mask_sigma: 2.0
+  # parameters for growing the mask size a bit
+  mask_smooth: 2
+  mask_thresh: 0.15
+run_synth_fit:
+  max_fwhm: 1.0
+  synthesis_linelist_fname: TODO
+  # number of times to iterate through fitting all syntheses
+  # the runtime is essentially proportional to this x the number of synthesis lines
+  num_iter_all: 2
+  # each optimization takes a few times to minimize the chi2
+  max_iter_each: 3
+  # parameters for initial prior on smoothing in A
+  smooth_approx: 0.1
+  smooth_scale : 0.3
+  # Set O, Si, Ca, Ti to [Mg/Fe]: currently forced to be true, capped at +/- 0.4
+  # use_MgFe_for_aFe: 1
+  # Set neutron-capture elements to r-process value: currently forced to be true
+  # use_EuFe_for_rproc: 1
+run_errors:
+run_plot:
