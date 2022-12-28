@@ -1,17 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import sys
 from setuptools import setup, find_packages
 from codecs import open
 from os import path, system
 from re import compile as re_compile
 from urllib.request import urlretrieve
-
-# For convenience.
-if sys.argv[-1] == "publish":
-    system("python setup.py sdist upload")
-    sys.exit()
 
 def read(filename):
     kwds = {"encoding": "utf-8"} if sys.version_info[0] >= 3 else {}
@@ -20,9 +12,7 @@ def read(filename):
     return contents
 
 # Get the version information.
-here = path.abspath(path.dirname(__file__))
-vre = re_compile("__version__ = \"(.*?)\"")
-version = vre.findall(read(path.join(here, "smh", "__init__.py")))[0]
+version = "0.1"
 
 # External data.
 if "--without-models" not in sys.argv:
@@ -59,43 +49,46 @@ else:
 
 
 setup(
-    name="smh",
+    name="LESSPayne",
     version=version,
-    #author="",
-    #author_email="",  # <-- Direct complaints to this address.
-    description="Spectroscopy Made Harder",
+    author="Alex Ji",
+    author_email="alexji@uchicago.edu",
+    description="LESSPayne",
     long_description=read(path.join(here, "README.md")),
-    url="https://github.com/andycasey/smhr",
+    url="https://github.com/alexji/LESSPayne",
     license="MIT",
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.4",
-        "Topic :: Scientific/Engineering :: Astronomy",
-        "Topic :: Scientific/Engineering :: Physics"
-    ],
-    keywords="astronomy stellar spectroscopy spectra made easy hard",
     packages=find_packages(exclude=["documents", "tests"]),
     install_requires=[
         "numpy",
         "scipy>=0.14.0",
         "six",
-        #"pyside>=1.1.2",
         "astropy",
         "pyyaml",
         "requests"
         ],
-    extras_require={
-        "test": ["coverage"]
-    },
     package_data={
         "": ["LICENSE"],
-        "smh": ["default_session.yaml"],
-        "smh.gui": ["matplotlibrc"],
-        "smh.photospheres": [
+        "LESSPayne.smh": ["default_session.yaml"],
+        "LESSPayne.smh.data.isotopes": [
+            "asplund09_isotopes.pkl",
+            "asplund09_isotopes_unicode.pkl",
+            "sneden08_all_isotopes.pkl",
+            "sneden08_all_isotopes_unicode.pkl",
+            "sneden08_rproc_isotopes.pkl",
+            "sneden08_rproc_isotopes_unicode.pkl",
+            "sneden08_sproc_isotopes.pkl",
+            "sneden08_sproc_isotopes_unicode.pkl",
+        ],
+        "LESSPayne.smh.data.spectra": [
+            "cd-38_245.fits",
+            "cs22892-52.fits", 
+            "g64-12.fits",     
+            "hd122563.fits",   
+            "hd140283.fits",   
+            "he1523-0901.fits",
+        ],
+        "LESSPayne.smh.gui": ["matplotlibrc"],
+        "LESSPayne.smh.photospheres": [
             "marcs-2011-standard.pkl",
             "castelli-kurucz-2004.pkl",
             "stagger-2013-optical.pkl",
@@ -103,10 +96,12 @@ setup(
             "stagger-2013-rosseland.pkl",
             "stagger-2013-height.pkl"
         ],
-        "smh.radiative_transfer.moog": [
+        "LESSPayne.smh.radiative_transfer.moog": [
             "defaults.yaml",
-            "abfind.in"
-        ]
+            "abfind.in",
+            "synth.in"
+        ],
+        "LESSPayne.Payne4LESS": ["other_data/*.npz", "other_data/*.fits"],
     },
     include_package_data=True,
     data_files=None,
