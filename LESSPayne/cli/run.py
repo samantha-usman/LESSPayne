@@ -1,11 +1,13 @@
 from optparse import OptionParser
 import yaml
-import os, sys
+import os, sys, time
 
 from LESSPayne.PayneEchelle.run_payne_echelle import run_payne_echelle
 from LESSPayne.autosmh.run_normalization import run_normalization
 
 if __name__=="__main__":
+    start = time.time()
+    
     parser = OptionParser()
     # Flags indicating which parts of the pipeline to run
     parser.add_option("-a", "--all", dest="run_all", action="store_true", default=False)
@@ -89,3 +91,6 @@ if __name__=="__main__":
     # Optional input: SP covariance matrix
     # Output: SMHR file with errors propagated
     # Optional output: 
+
+    print(f"Time to run LESSPayne: {time.time()-start}:.1f}")
+    
