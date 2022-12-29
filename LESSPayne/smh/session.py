@@ -29,7 +29,7 @@ from .linelists import LineList
 from .utils import mkdtemp
 from . import (photospheres, radiative_transfer, specutils, isoutils, utils)
 from .spectral_models import ProfileFittingModel, SpectralSynthesisModel
-from smh.photospheres.abundances import asplund_2009 as solar_composition
+from .photospheres.abundances import asplund_2009 as solar_composition
 from . import (smh_plotting, __version__)
 from .optimize_stellar_params import optimize_stellar_parameters as run_optimize_stellar_parameters
 from .optimize_stellar_params import optimize_feh as run_optimize_feh
@@ -852,7 +852,7 @@ class Session(BaseSession):
         self.metadata["normalization"]["continuum"])):
             normalized_orders.append(specutils.Spectrum1D(spectrum.dispersion,
                 spectrum.flux / continuum,
-                continuum * spectrum.ivar * continuum))
+                spectrum.flux * spectrum.ivar * spectrum.flux))
 
         self.normalized_spectrum = specutils.spectrum.stitch(normalized_orders)
 
