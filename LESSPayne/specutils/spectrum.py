@@ -128,9 +128,9 @@ class Spectrum1D(object):
                 dispersion, flux, ivar, metadata = method(path, **kwargs)
 
             except Exception as e:
-                print("=====")
-                print(method)
-                print(e)
+                #print("=====")
+                #print(method)
+                #print(e)
                 continue
 
             else:
