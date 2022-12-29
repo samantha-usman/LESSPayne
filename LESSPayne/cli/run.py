@@ -3,16 +3,17 @@ import yaml
 import os, sys
 
 from LESSPayne.PayneEchelle.run_payne_echelle import run_payne_echelle
+from LESSPayne.autosmh.run_normalization import run_normalization
 
 if __name__=="__main__":
     parser = OptionParser()
     # Flags indicating which parts of the pipeline to run
     parser.add_option("-a", "--all", dest="run_all", action="store_true", default=False)
-    parser.add_option("-p", "--payne", dest="run_payneechelle", action="store_true", default=False)
-    parser.add_option("-n", "--norm", dest="run_normalization", action="store_true", default=False)
-    parser.add_option("-w", "--eqw", dest="run_equivalent_width", action="store_true", default=False)
-    parser.add_option("-s", "--synth", dest="run_synthesis", action="store_true", default=False)
-    parser.add_option("-e", "--errors", dest="run_errors", action="store_true", default=False)
+    parser.add_option("-1", "--payne", dest="run_payneechelle", action="store_true", default=False)
+    parser.add_option("-2", "--norm", dest="run_normalization", action="store_true", default=False)
+    parser.add_option("-3", "--eqw", dest="run_equivalent_width", action="store_true", default=False)
+    parser.add_option("-4", "--synth", dest="run_synthesis", action="store_true", default=False)
+    parser.add_option("-5", "--errors", dest="run_errors", action="store_true", default=False)
     
     # Manually set stellar parameters - this needs to be moved to the config file!!!
     parser.add_option("-T", "--Teff", dest="Teff",
@@ -44,6 +45,18 @@ if __name__=="__main__":
         cfg = yaml.load(fp, yaml.FullLoader)
     print(cfg)
     ## TODO: we should write out a CFG file with the defaults filled in
+
+    outdir = cfg["output_directory"]
+    figdir = cfg["figure_directory"]
+    if not os.path.exists(outdir):
+        print("Creating output directory:",outdir)
+        os.makedirs(outdir)
+    if not os.path.exists(figdir):
+        print("Creating figure directory:",figdir)
+        os.makedirs(figdir)
+    print("Saving to output directory:",outdir)
+    print("Saving figures to output directory:",figdir)
+    
     
     ## PayneEchelle
     # Input: config file, spectrum files to analyze
@@ -57,8 +70,7 @@ if __name__=="__main__":
     # Output: SMHR file with normalization done, mask file
     # Optional output: order normalization stamps
     if options.run_normalization:
-        # run_normalization(cfg)
-        pass
+        run_normalization(cfg)
     
     ## EQW
     # Input: SMHR file with normalization done, mask file
