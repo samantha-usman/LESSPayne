@@ -1,3 +1,1 @@
-#from . import smh, PayneEchelle
-from . import PayneEchelle
-
+from . import smh, PayneEchelle, autosmh
