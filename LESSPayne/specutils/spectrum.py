@@ -127,7 +127,10 @@ class Spectrum1D(object):
             try:
                 dispersion, flux, ivar, metadata = method(path, **kwargs)
 
-            except:
+            except Exception as e:
+                print("=====")
+                print(method)
+                print(e)
                 continue
 
             else:
@@ -294,7 +297,7 @@ class Spectrum1D(object):
         # Parse the order mapping into dispersion values.
         # Do it this way to ensure ragged arrays work
         num_pixels, num_orders = metadata["NAXIS1"], metadata["NAXIS2"]
-        dispersion = np.zeros((num_orders, num_pixels), dtype=np.float) + np.nan
+        dispersion = np.zeros((num_orders, num_pixels), dtype=float) + np.nan
         for j in range(num_orders):
             _dispersion = compute_dispersion(*order_mapping[j])
             dispersion[j,0:len(_dispersion)] = _dispersion
@@ -1075,7 +1078,7 @@ class Spectrum1D(object):
             exclude_indices.extend(lower_exclude)
             exclude_indices = np.array(exclude_indices)
             
-            if len(exclude_indices) is 0: break
+            if len(exclude_indices) == 0: break
             
             exclusions.extend(exclude_indices)
             
