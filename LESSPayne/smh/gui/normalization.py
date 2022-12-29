@@ -710,23 +710,26 @@ class NormalizationTab(QtGui.QWidget):
         
         xy = self._exclude_selected_region.get_xy()
         
-        if event.xdata is None:
-            # Out of axis; exclude based on the last known worthwhile position.
-            xdata = xy[2, 0]
-        else:
-            xdata = event.xdata
-
+        if xy[0,0] > xy[2,0]:
+            x1, x2 = xy[0,0], xy[2,0]
+            xy[0,0] = xy[1,0] = xy[4,0] = x2
+            xy[2,0] = xy[3,0] = x1
+        
         # If the two mouse events were within some time interval,
         # then we should not add a mask because those signals were probably
         # part of a double-click event.
         if  time() - signal_time > DOUBLE_CLICK_INTERVAL \
-        and np.abs(xy[0,0] - xdata) > 0:
+        and np.abs(xy[0,0] - xy[2,0]) > 0:
             
             # Update the cache with the new mask.
-            _ =  self._cache["input"].get("exclude", np.array([]))
+            _ =  np.array(self._cache["input"].get("exclude", np.array([])))
             _.shape = (-1, 2)
+            
             self._cache["input"]["exclude"] = np.vstack((
                 np.array([xy[0,0], xy[2, 0]]).reshape(-1, 2), _))
+            
+            
+            print("exclude",self._cache["input"]["exclude"])
 
             # Fit and re-draw the continuum, and its mask.
             self.fit_continuum(clobber=True)
@@ -1374,7 +1377,7 @@ class NormalizationTab(QtGui.QWidget):
         if continuum is not None and not clobber:
             # Nothing to do.
             return
-        print("gui.normalization.fit_continuum: fitting {}".format(index))
+        #print("gui.normalization.fit_continuum: fitting {}".format(index))
 
         kwds = self._cache["input"].copy()
         kwds["full_output"] = True
