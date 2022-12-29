@@ -11,7 +11,7 @@ from pkg_resources import resource_stream
 
 from .castelli_kurucz import Interpolator as ck_interp
 from .marcs import Interpolator as marcs_interp
-from .stagger import Interpolator as stagger_interp
+#from .stagger import Interpolator as stagger_interp
 from . import utils
 
 logger = logging.getLogger(__name__)
@@ -49,8 +49,8 @@ _photospheres = [
         "marcs",  "marcs-2011-standard.pkl"),
     ("Castelli & Kurucz 1D (2004)",
         "castelli/kurucz", "castelli-kurucz-2004.pkl"),
-    ("Stagger <3D> (2013; optical)",
-        "stagger-o", "stagger-2013-optical.pkl"),
+    #("Stagger <3D> (2013; optical)",
+    #    "stagger-o", "stagger-2013-optical.pkl"),
     #("Stagger <3D> (2013; column mass density)",
     #    "stagger-m", "stagger-2013-mass-density.pkl"),
     #("Stagger <3D> (2013; height)",

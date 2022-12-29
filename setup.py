@@ -45,7 +45,7 @@ setup(
     author="Alex Ji",
     author_email="alexji@uchicago.edu",
     description="LESSPayne",
-    long_description=read(path.join(here, "README.md")),
+    long_description="Labeling Echelle Spectra with SMHR and Payne",
     url="https://github.com/alexji/LESSPayne",
     license="MIT",
     packages=find_packages(exclude=["documents", "tests"]),
