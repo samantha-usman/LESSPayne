@@ -225,7 +225,7 @@ def run_normalization(cfg):
 
     assert popt_fname.endswith(".npz") or popt_fname.endswith(".npy"), popt_fname
     assert out_fname.endswith(".smh"), out_fname
-    assert not os.path.exists(out_fname), f"{out_fname} already exists! exiting"
+    #assert not os.path.exists(out_fname), f"{out_fname} already exists! exiting"
     assert os.path.exists(NNpath), NNpath
     
     startall = time.time()

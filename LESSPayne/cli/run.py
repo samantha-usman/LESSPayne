@@ -79,6 +79,9 @@ if __name__=="__main__":
     # Output: SMHR file with EQWs fit
     # Optional output: EQW stamp plot
     # Optional output: line abundance table
+    if options.run_equivalent_width:
+        run_equivalent_width(cfg)
+    
     
     ## Synth
     # Input: SMHR file with normalization and eqw done
