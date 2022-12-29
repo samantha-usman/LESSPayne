@@ -17,8 +17,8 @@ from pkg_resources import resource_stream
 
 from . import utils
 from .utils import RTError
-from smh.utils import element_to_species
-from smh import linelists
+from LESSPayne.smh.utils import element_to_species
+from LESSPayne.smh import linelists
 
 logger = logging.getLogger(__name__)
 

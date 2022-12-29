@@ -14,7 +14,7 @@ from .quality_constraints import constraints
 from ..linelists import LineList
 from ..robust_polyfit import polyfit as rpolyfit
 from astropy.table import Row
-from smh.photospheres.abundances import asplund_2009 as solar_composition
+from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
 from scipy import optimize as op
 from scipy.linalg import svd, cholesky, solve_triangular, LinAlgError, inv
 

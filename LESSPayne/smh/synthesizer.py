@@ -17,7 +17,7 @@ import logging
 from .linelists import LineList
 from . import (photospheres, radiative_transfer, specutils, isoutils, utils)
 from .spectral_models import SpectralSynthesisModel
-from smh.photospheres.abundances import asplund_2009 as solar_composition
+from .photospheres.abundances import asplund_2009 as solar_composition
 
 logger = logging.getLogger(__name__)
 
