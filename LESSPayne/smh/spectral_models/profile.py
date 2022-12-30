@@ -19,7 +19,7 @@ from scipy.special import wofz
 from scipy import integrate
 
 from .base import BaseSpectralModel
-from ..specutils import Spectrum1D
+from LESSPayne.specutils import Spectrum1D
 from ..linelists import LineList
 
 logger = logging.getLogger(__name__)

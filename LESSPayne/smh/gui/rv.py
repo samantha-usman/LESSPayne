@@ -15,9 +15,10 @@ from six import string_types
 import mpl
 from matplotlib import (gridspec, pyplot as plt)
 
-from smh import (Session, specutils)
-import smh
-from smh.linelists import LineList
+from LESSPayne.smh import Session
+import LESSPayne.smh
+from LESSPayne.smh.linelists import LineList
+from LESSPayne import specutils
 
 import logging
 logger = logging.getLogger(__name__)

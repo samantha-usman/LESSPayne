@@ -449,36 +449,3 @@ class SpectralModelsWidget(QtGui.QWidget):
 
         return True
 
-
-if __name__ == "__main__":
-
-    import sys
-
-    from smh import linelists, Session, specutils
-    transitions = linelists.LineList.read("/Users/arc/research/ges/linelist/vilnius.ew.fe")
-
-    session = Session([
-        "/Users/arc/codes/smh/hd44007red_multi.fits",
-        "/Users/arc/codes/smh/hd44007blue_multi.fits",
-    ])
-
-    session.normalized_spectrum = specutils.Spectrum1D.read(
-        "../smh/hd44007-rest.fits")
-
-    session.metadata["line_list"] = transitions
-
-    from smh import spectral_models as sm
-    foo = []
-    for i in range(len(transitions)):
-        if i % 2:
-            foo.append(sm.ProfileFittingModel(session, transitions["hash"][[i]]))
-        else:
-            foo.append(sm.SpectralSynthesisModel(session, transitions["hash"][[i]],
-                transitions["elem1"][i]))
-
-    
-    app = QtGui.QApplication(sys.argv)
-    window = SpectralModelsWidget(foo)
-    window.show()
-    sys.exit(app.exec_())
-    

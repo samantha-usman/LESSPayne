@@ -7,10 +7,11 @@ import sys
 from PySide2 import (QtCore, QtWidgets as QtGui)
 from six import string_types, iteritems
 
-from smh import (Session, specutils)
-from smh.spectral_models import ProfileFittingModel, SpectralSynthesisModel
-import smh.radiative_transfer as rt
-from smh.linelists import LineList
+from LESSPayne.smh import Session
+from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesisModel
+import LESSPayne.smh.radiative_transfer as rt
+from LESSPayne.smh.linelists import LineList
+from LESSPayne import specutils
 
 from astropy import table
 

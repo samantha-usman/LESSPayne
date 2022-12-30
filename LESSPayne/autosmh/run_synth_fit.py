@@ -5,7 +5,7 @@ from copy import deepcopy
 from scipy.ndimage import gaussian_filter1d
 
 from LESSPayne.smh import Session
-from LESSPayne.smh.specutils import Spectrum1D 
+from LESSPayne.specutils import Spectrum1D 
 from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesisModel
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
 from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel
@@ -135,7 +135,7 @@ def run_synth_fit(cfg):
     keys = ["max_fwhm","synthesis_linelist_fname","extra_synthesis_linelist_fname",
             "num_iter_all","smooth_approx","smooth_scale","max_iter_each"]
     for key in keys:
-        notes += "  {key}: {scfg['key']}\n"
+        notes += f"  {key}: {scfg[key]}\n"
     notes = notes[:-1]
     
     startall = time.time()

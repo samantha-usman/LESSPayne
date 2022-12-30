@@ -27,7 +27,8 @@ import astropy.table
 from astropy.io import ascii
 from .linelists import LineList
 from .utils import mkdtemp
-from . import (photospheres, radiative_transfer, specutils, isoutils, utils)
+from . import (photospheres, radiative_transfer, isoutils, utils)
+from LESSPayne import specutils
 from .spectral_models import ProfileFittingModel, SpectralSynthesisModel
 from .photospheres.abundances import asplund_2009 as solar_composition
 from . import (smh_plotting, __version__)

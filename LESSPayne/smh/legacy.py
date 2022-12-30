@@ -10,7 +10,8 @@ from shutil import copyfile, rmtree
 import pickle
 
 from .utils import mkdtemp
-from . import (Session, LineList, specutils, __version__)
+from . import (Session, LineList, __version__)
+from LESSPayne import specutils
 from spectral_models import ProfileFittingModel, SpectralSynthesisModel
 
 """ Functions for converting and loading older versions of SMHR """

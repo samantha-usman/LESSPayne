@@ -21,7 +21,7 @@ from scipy import stats
 
 from .base import BaseSpectralModel, penalized_curve_fit_lm
 from LESSPayne.smh import utils
-from LESSPayne.smh.specutils import Spectrum1D
+from LESSPayne.specutils import Spectrum1D
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
 # HACK TODO REVISIT SOLAR SCALE: Read from session defaults?
 from astropy.table import Table

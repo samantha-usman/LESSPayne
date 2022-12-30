@@ -16,7 +16,7 @@ import numpy as np
 # Import functionality related to each tab
 import rv, normalization, summary, stellar_parameters, chemical_abundances, review
 
-import smh
+from LESSPayne import smh, specutils
 #from balmer import BalmerLineFittingDialog
 from balmer import *
 from linelist_manager import TransitionsDialog
@@ -522,7 +522,7 @@ class Ui_MainWindow(QtGui.QMainWindow):
         path, _ = QtGui.QFileDialog.getOpenFileName(self,
             caption="Pick comparison spectrum", directory="", filter="")
         if not path: return
-        spectrum = smh.specutils.Spectrum1D.read(path)
+        spectrum = specutils.Spectrum1D.read(path)
         self.stellar_parameters_tab.specfig.update_comparison_spectrum(spectrum)
         self.chemical_abundances_tab.figure.update_comparison_spectrum(spectrum)
         return None

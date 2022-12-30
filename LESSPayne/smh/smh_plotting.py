@@ -10,7 +10,7 @@ from matplotlib.ticker import MultipleLocator, ScalarFormatter
 import os
 import logging
 
-from . import specutils
+from LESSPayne import specutils
 from . import spectral_models
 
 logger = logging.getLogger(__name__)

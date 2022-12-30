@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 import logging
 
 from .linelists import LineList
-from . import (photospheres, radiative_transfer, specutils, isoutils, utils)
+from . import (photospheres, radiative_transfer, isoutils, utils)
+from LESSPayne import specutils
 from .spectral_models import SpectralSynthesisModel
 from .photospheres.abundances import asplund_2009 as solar_composition
 

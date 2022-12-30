@@ -17,7 +17,7 @@ from PySide2 import (QtCore, QtGui as QtGui2, QtWidgets as QtGui)
 from scipy import interpolate
 
 from smh.balmer import BalmerLineModel
-from smh.specutils import Spectrum1D
+from LESSPayne.specutils import Spectrum1D
 
 
 import mpl
