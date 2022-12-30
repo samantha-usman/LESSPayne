@@ -4,6 +4,7 @@ import os, sys, time
 
 from LESSPayne.PayneEchelle.run_payne_echelle import run_payne_echelle
 from LESSPayne.autosmh.run_normalization import run_normalization
+from LESSPayne.autosmh.run_eqw_fit import run_eqw_fit
 
 if __name__=="__main__":
     start = time.time()
@@ -80,7 +81,7 @@ if __name__=="__main__":
     # Optional output: EQW stamp plot
     # Optional output: line abundance table
     if options.run_equivalent_width:
-        run_equivalent_width(cfg)
+        run_eqw_fit(cfg)
     
     
     ## Synth
@@ -95,5 +96,5 @@ if __name__=="__main__":
     # Output: SMHR file with errors propagated
     # Optional output: 
 
-    print(f"Time to run LESSPayne: {time.time()-start}:.1f}")
+    print(f"Time to run LESSPayne: {time.time()-start:.1f}")
     
