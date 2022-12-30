@@ -16,7 +16,6 @@ import mpl
 from matplotlib import (gridspec, pyplot as plt)
 
 from LESSPayne.smh import Session
-import LESSPayne.smh
 from LESSPayne.smh.linelists import LineList
 from LESSPayne import specutils
 

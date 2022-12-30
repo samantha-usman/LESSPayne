@@ -16,7 +16,11 @@ import numpy as np
 # Import functionality related to each tab
 import rv, normalization, summary, stellar_parameters, chemical_abundances, review
 
-from LESSPayne import smh, specutils
+## APJ: I have NO idea how this is working
+## But if I do from LESSPayne import smh the GUI gets weird
+import smh
+#print(smh)
+from LESSPayne import specutils
 #from balmer import BalmerLineFittingDialog
 from balmer import *
 from linelist_manager import TransitionsDialog

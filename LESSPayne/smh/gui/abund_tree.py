@@ -1,3 +1,6 @@
+## Note: this file is not in use right now but it was a lot of work to code up so keeping it
+## It may be broken
+
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 
