@@ -16,6 +16,7 @@ __all__ = ["celestial_velocities", "corrections", "corrections_from_headers"]
 
 import logging
 import yaml
+#import json
 from pkg_resources import resource_stream
 
 import numpy as np

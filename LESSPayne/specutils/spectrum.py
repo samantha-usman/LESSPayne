@@ -922,7 +922,9 @@ class Spectrum1D(object):
         continuum_indices = np.sort(list(set(continuum_indices).difference(
             zero_flux_indices)))
 
-        if 1 > continuum_indices.size:
+        # Fix from Erika Holmbeck
+        if order > continuum_indices.size:
+        #if 1 > continuum_indices.size:
             no_continuum = np.nan * np.ones_like(dispersion)
             failed_spectrum = self.__class__(dispersion=dispersion,
                 flux=no_continuum, ivar=no_continuum, metadata=self.metadata)
@@ -956,7 +958,9 @@ class Spectrum1D(object):
         # TODO: Use inverse variance array when fitting polynomial/spline.
         for iteration in range(max_iterations):
             
-            if 1 > continuum_indices.size:
+            # Fix from Erika Holmbeck
+            if order > continuum_indices.size:
+            #if 1 > continuum_indices.size:
 
                 no_continuum = np.nan * np.ones_like(dispersion)
                 failed_spectrum = self.__class__(dispersion=dispersion,
@@ -1010,6 +1014,7 @@ class Spectrum1D(object):
 
                 popt, pcov = op.curve_fit(lambda x, *c: np.polyval(c, x), 
                     splrep_disp, splrep_flux, coeffs, 
+                    # Note: Erika changed sigma to splrep_weights, not changing yet
                     sigma=self.ivar[continuum_indices], absolute_sigma=False)
                 continuum = np.polyval(popt, dispersion)
 
@@ -1020,6 +1025,7 @@ class Spectrum1D(object):
                 
                 popt, pcov = op.curve_fit(lambda x, *c: np.polynomial.legendre.legval(x, c), 
                     splrep_disp, splrep_flux, coeffs, 
+                    # Note: Erika changed sigma to splrep_weights, not changing yet
                     sigma=self.ivar[continuum_indices], absolute_sigma=False)
                 continuum = np.polynomial.legendre.legval(dispersion, popt)
 
@@ -1031,6 +1037,7 @@ class Spectrum1D(object):
                 
                 popt, pcov = op.curve_fit(lambda x, *c: np.polynomial.chebyshev.chebval(x, c), 
                     splrep_disp, splrep_flux, coeffs, 
+                    # Note: Erika changed sigma to splrep_weights, not changing yet
                     sigma=self.ivar[continuum_indices], absolute_sigma=False)
                 continuum = np.polynomial.chebyshev.chebval(dispersion, popt)
 
@@ -1052,6 +1059,7 @@ class Spectrum1D(object):
                 p0 = [p0[0], p0[1], p0[2]] + [0. for O in range(order)]
                 popt, pcov = op.curve_fit(_func, 
                     splrep_disp, splrep_flux, p0, 
+                    # Note: Erika changed sigma to splrep_weights, not changing yet
                     sigma=self.ivar[continuum_indices], absolute_sigma=False, maxfev=100000)
                 
                 continuum = _func(dispersion, *popt)
@@ -1123,12 +1131,72 @@ class Spectrum1D(object):
         ii = np.logical_and(self.dispersion > wlmin, self.dispersion < wlmax)
         return self.__class__(self.dispersion[ii], self.flux[ii], self.ivar[ii], self.metadata)
 
+    def get_knots(self, knot_spacing, exclude=None):
+        """
+        This is a hack to get the knots used in the fit_continuum spline
+        """
+        dispersion = self.dispersion.copy()
+
+        continuum_indices = range(len(self.flux))
+        
+        # See if there are any regions we need to exclude
+        if exclude is not None and len(exclude) > 0:
+            exclude_indices = []
+            
+            if isinstance(exclude[0], float) and len(exclude) == 2:
+                # Only two floats given, so we only have one region to exclude
+                exclude_indices.extend(range(*np.searchsorted(dispersion, exclude)))
+                
+            else:
+                # Multiple regions provided
+                for exclude_region in exclude:
+                    exclude_indices.extend(
+                        range(*np.searchsorted(dispersion, exclude_region)))
+        
+            continuum_indices = np.sort(list(set(continuum_indices).difference(
+                np.sort(exclude_indices))))
+
+        # We should exclude non-finite values from the fit.
+        non_finite_indices = np.where(~np.isfinite(self.flux * self.ivar))[0]
+        continuum_indices = np.sort(list(set(continuum_indices).difference(
+            non_finite_indices)))
+
+        # We should also exclude zero or negative flux points from the fit
+        zero_flux_indices = np.where(0 >= self.flux)[0]
+        continuum_indices = np.sort(list(set(continuum_indices).difference(
+            zero_flux_indices)))
+
+
+        if knot_spacing is None or knot_spacing == 0 or continuum_indices == []:
+            knots = []
+        else:
+            knot_spacing = abs(knot_spacing)
+            
+            end_spacing = ((dispersion[-1] - dispersion[0]) % knot_spacing) /2.
+            if knot_spacing/2. > end_spacing: end_spacing += knot_spacing/2.
+                
+            knots = np.arange(dispersion[0] + end_spacing, 
+                dispersion[-1] - end_spacing + knot_spacing, 
+                knot_spacing)
+
+            try:
+                if len(knots) > 0 and knots[-1] > dispersion[continuum_indices][-1]:
+                    knots = knots[:knots.searchsorted(dispersion[continuum_indices][-1])]
+                
+                if len(knots) > 0 and knots[0] < dispersion[continuum_indices][0]:
+                    knots = knots[knots.searchsorted(dispersion[continuum_indices][0]):]
+            except IndexError:
+                print("Spectrum error: continuum indices:",continuum_indices)
+                knots = []
+        return knots
+    
     def add_noise(self, seed=None):
         if seed is not None:
             np.random.seed(seed)
         noise = np.sqrt(1./self.ivar) * np.random.randn(len(self.flux))
         return self.__class__(self.dispersion, self.flux + noise, self.ivar, self.metadata)
 
+    
 
 def compute_dispersion(aperture, beam, dispersion_type, dispersion_start,
     mean_dispersion_delta, num_pixels, redshift, aperture_low, aperture_high,
@@ -1227,7 +1295,7 @@ def compute_dispersion(aperture, beam, dispersion_type, dispersion_start,
         assert Pmin == int(Pmin), Pmin; Pmin = int(Pmin)
 
         if function_type == 1:
-            # Legendre polynomial.
+            # Chebyshev polynomial.
             if None in (order, Pmin, Pmax, coefficients):
                 raise TypeError("order, Pmin, Pmax and coefficients required "
                                 "for a Chebyshev or Legendre polynomial")
