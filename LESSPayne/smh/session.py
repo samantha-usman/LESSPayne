@@ -214,7 +214,7 @@ class Session(BaseSession):
             """
 
             basename = os.path.basename(path)
-            existing_paths = np.hstack(metadata["reconstruct_paths"].values())
+            existing_paths = np.hstack(list(metadata["reconstruct_paths"].values()))
 
             if basename in existing_paths:
 
