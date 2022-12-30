@@ -72,6 +72,13 @@ def run_eqw_fit(cfg):
     if num_removed > 0:
         print(f"Removed {num_removed}/{len(session.spectral_models)} lines with FWHM > {max_fwhm}")
 
+    
+    notes = f"run_eqw_fit:\n  {linelist_fname}"
+    if linelist_extra_fname is not None:
+        session.import_linelist_as_profile_models(linelist_extra_fname)
+        notes += f"\n{linelist_extra_fname} imported but not fit"
+    session.add_to_notes(notes)
+
     ## Save
     session.save(smh_fname, overwrite=True)
     print(f"Total time to run all: {time.time()-startall:.1f}")

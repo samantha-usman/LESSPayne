@@ -2112,7 +2112,7 @@ class Session(BaseSession):
         if copy_to_working_dir:
             self.copy_file_to_working_directory(filename)
             
-        return None
+        return num_added
     
     def export_normalized_spectrum(self, path):
         """ Write out the normalized spectrum """
@@ -2184,3 +2184,6 @@ class Session(BaseSession):
             "normalization": normalization_kwargs.copy()
         })
         
+    def add_to_notes(self, s):
+        self.metadata["NOTES"] += s+"\n\n"
+    

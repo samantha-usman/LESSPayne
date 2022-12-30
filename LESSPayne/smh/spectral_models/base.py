@@ -634,7 +634,14 @@ def penalized_curve_fit_lm(f, xdata, ydata,
     popt = res.x
 
     # Do Moore-Penrose inverse discarding zero singular values.
-    _, s, VT = svd(res.jac, full_matrices=False)
+    try:
+        _, s, VT = svd(res.jac, full_matrices=False)
+    except ValueError as e:
+        print("Probably error in covariance matrix")
+        print(e)
+        print(popt)
+        print(res.jac)
+        raise RuntimeError("Optimal parameters not found: " + res.message)
     threshold = np.finfo(float).eps * max(res.jac.shape) * s[0]
     s = s[s > threshold]
     VT = VT[:s.size]

@@ -217,11 +217,13 @@ def run_normalization(cfg):
         blue_trim=None, red_trim=None,
     )
     ## Saving these to the session
-    norm_params = {}
+    normalization_parameters = {}
+    notes = f"run_normalization parameters:\n  {popt_fname}\n"
     for key in ["mask_sigma","mask_smooth","mask_thresh","max_mask_frac","min_frac_per_knot",
                 "blue_trim","red_trim","continuum_spline_order","continuum_max_iterations"]:
-        norm_params[key] = ncfg[key]
-    
+        normalization_parameters[key] = ncfg[key]
+        notes += f"  {key}: {ncfg[key]}\n"
+    notes = notes[:-1] # remove the last \n
 
     assert popt_fname.endswith(".npz") or popt_fname.endswith(".npy"), popt_fname
     assert out_fname.endswith(".smh"), out_fname
@@ -309,7 +311,7 @@ def run_normalization(cfg):
     
     ## Saving the Payne masks to the session along with the metadata
     ## In principle we should be able to use this to reset normalizations
-    session.metadata["payne_masks"] = [all_exclude_regions, all_exclude_regions_2, norm_params]
+    session.metadata["payne_masks"] = [all_exclude_regions, all_exclude_regions_2, normalization_parameters]
     
     ## Step 4: create normalizations with masks
     start = time.time()
@@ -379,6 +381,7 @@ def run_normalization(cfg):
     session.metadata["normalization"]["normalization_kwargs"] = all_kwds
     
     session.stitch_and_stack()
+    session.add_to_notes(notes)
 
     ## Finish
     session.save(out_fname, overwrite=True)
