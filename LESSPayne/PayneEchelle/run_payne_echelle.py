@@ -144,7 +144,7 @@ def run_payne_echelle(cfg):
     print("Median RV order wavelength: {np.median(wavelength[iorder]):.1f}")
 
     start2 = time.time()
-    print("Running with Payne4MIKE ({NNpath})")
+    print(f"Running with PayneEchelle ({NNpath})")
     model = DefaultPayneModel.load(NNpath, num_order=norder)
     errors_payne = utils.read_default_model_mask(wavelength_payne=model.wavelength_payne)
     model = DefaultPayneModel.load(NNpath, num_order=norder, errors_payne=errors_payne)
