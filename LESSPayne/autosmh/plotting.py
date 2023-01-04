@@ -343,8 +343,8 @@ def plot_fe_trends(ax, session, plotname, ltab):
         x1, x2 = t1["wavelength"], t2["wavelength"]
     else:
         raise ValueError(f"{plotname} has to be 'expot' or 'REW'")
-    ax.axhline(biweight_location(y1), color='k', lw=2, alpha=.7)
-    ax.axhline(biweight_location(y2), color='r', lw=2, alpha=.7)
+    ax.axhline(biweight_location(y1, ignore_nan=True), color='k', lw=2, alpha=.7)
+    ax.axhline(biweight_location(y2, ignore_nan=True), color='r', lw=2, alpha=.7)
     ax.plot(x1, y1, 'o', mfc='none', mec='k')
     ax.plot(x2, y2, 's', mfc='r', mec='k')
     ax.set_ylabel("[Fe/H]")
