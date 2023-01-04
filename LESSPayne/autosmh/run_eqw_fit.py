@@ -10,6 +10,8 @@ from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesis
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
 from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel
 
+from .plotting import plot_summary_1, plot_summary_2, plot_model_fit, get_line_table, plot_fe_trends
+
 def run_eqw_fit(cfg):
     name = cfg["output_name"]
     NNpath = cfg["NN_file"]
@@ -85,8 +87,34 @@ def run_eqw_fit(cfg):
 
     ## Plot
     if ecfg["save_figure"]:
-        print(f"EQW Fit Figure not yet implemented")
         figoutname = os.path.join(figdir, f"{name}_eqw.png")
-        #start = time.time()
-        #print(f"Time to save figure: {time.time()-start:.1f}")
+        start = time.time()
+        plot_eqw_grid(session, figoutname, name)
+        print(f"Time to save figure: {time.time()-start:.1f}")
         
+
+def plot_eqw_grid(session, outfname, name,
+                  Ncol=5, width=6, height=4, dpi=150):
+    import matplotlib.pyplot as plt
+    eqw_models = [m for m in session.spectral_models if isinstance(m, ProfileFittingModel)]
+    N = len(eqw_models) + 4
+    Nrow = (N // Ncol) + int(N % Ncol > 0)
+    assert Nrow*Ncol >= N, (Nrow,Ncol,N)
+    
+    ltab = get_line_table(session, True)
+    
+    fig, axes = plt.subplots(Nrow, Ncol, figsize=(width*Ncol, height*Nrow))
+    plot_summary_1(axes.flat[0], session, ltab, name)
+    plot_summary_2(axes.flat[1], session, ltab)
+    for model, ax in zip(eqw_models, axes.flat[2:]):
+        linewave = model.transitions[0]["wavelength"]
+        plot_model_fit(ax, session, model, label=None,
+                       linewave=linewave, inset_dwl=None)
+    plot_fe_trends(axes.flat[-2], session, "expot", ltab)
+    plot_fe_trends(axes.flat[-1], session, "REW", ltab)
+    
+    fig.tight_layout()
+    fig.subplots_adjust(top=.96, wspace=0.15, hspace=.15)
+    fig.suptitle(name, fontsize=30, weight='bold', fontfamily='monospace',color='k')
+    fig.savefig(outfname, dpi=dpi)
+    plt.close(fig)
