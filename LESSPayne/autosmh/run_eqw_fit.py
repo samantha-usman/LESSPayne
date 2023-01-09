@@ -4,7 +4,7 @@ import yaml
 from copy import deepcopy
 from scipy.ndimage import gaussian_filter1d
 
-from LESSPayne.smh import Session
+from LESSPayne.smh import Session, utils
 from LESSPayne.specutils import Spectrum1D 
 from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesisModel
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
@@ -108,8 +108,14 @@ def plot_eqw_grid(session, outfname, name,
     plot_summary_2(axes.flat[1], session, ltab)
     for model, ax in zip(eqw_models, axes.flat[2:]):
         linewave = model.transitions[0]["wavelength"]
-        plot_model_fit(ax, session, model, label=None,
-                       linewave=linewave, inset_dwl=None)
+        label = f"{utils.species_to_element(model.species[0]).replace(' ','')}{model.wavelength:.0f}"
+        try:
+            plot_model_fit(ax, session, model, label=label,
+                           linewave=linewave, inset_dwl=None)
+        except Exception as e:
+            print("Error:",model.species,model.wavelength)
+            print(e)
+            print("Skipping...")
     plot_fe_trends(axes.flat[-2], session, "expot", ltab)
     plot_fe_trends(axes.flat[-1], session, "REW", ltab)
     

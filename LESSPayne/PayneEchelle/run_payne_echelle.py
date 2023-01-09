@@ -79,7 +79,7 @@ def run_payne_echelle(cfg):
         print(f"Automatic velocity from {rv_wave1:.0f}-{rv_wave2:.0f}: {rv0:.1f} (+ {vhelcorr:.1f} for vhel)")
     else:
         rv0 = float(pcfg["initial_velocity"])
-        print(f"Initial RV {initial_rv:.1f}")
+        print(f"Initial RV {rv0:.1f}")
     
     ## Preprocess the spectrum
     wavelength, spectrum, spectrum_err = read_spectrum(specfname)
