@@ -21,20 +21,6 @@ if __name__=="__main__":
     parser.add_option("-5", "--synth", dest="run_synthesis", action="store_true", default=False)
     parser.add_option("-6", "--errors", dest="run_errors", action="store_true", default=False)
     
-    """
-    # Manually set stellar parameters - this needs to be moved to the config file!!!
-    parser.add_option("-T", "--Teff", dest="Teff",
-                      help="Override Payne Teff", type="int")
-    parser.add_option("-G", "--logg", dest="logg",
-                      help="Override Payne logg", type="float")
-    parser.add_option("-V", "--vt", dest="vt",
-                      help="Override Payne vt", type="float")
-    parser.add_option("-M", "--MH", dest="MH",
-                      help="Override Payne MH", type="float")
-    parser.add_option("-A", "--aFe", dest="aFe",
-                      help="Override Payne aFe (default 0.4)", type="float")
-    """
-
     (options, args) = parser.parse_args()
     
     if options.run_all:

@@ -59,6 +59,8 @@ setup(
         ],
     package_data={
         "": ["LICENSE"],
+        "LESSPayne": ["data/default.yaml","data/template_spectra/*","data/NN_normalized_spectra_float16_fixwave.npz"],
+        "LESSPayne.PayneEchelle": ["other_data/*.npz", "other_data/*.fits"],
         "LESSPayne.smh": ["default_session.yaml"],
         "LESSPayne.smh.data.isotopes": [
             "asplund09_isotopes.pkl",
@@ -92,7 +94,6 @@ setup(
             "abfind.in",
             "synth.in"
         ],
-        "LESSPayne.Payne4LESS": ["other_data/*.npz", "other_data/*.fits"],
     },
     include_package_data=True,
     data_files=None,
