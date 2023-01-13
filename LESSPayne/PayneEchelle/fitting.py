@@ -18,7 +18,8 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                default_rv_polynomial_order=2,
                bounds_set=None,
                initial_stellar_parameters=None,
-               skip_rv_prefit=False, RV_range=500):
+               skip_rv_prefit=False, RV_range=500,
+               poly_coeff_min=-1000, poly_coeff_max=1000):
 
     '''
     Fitting MIKE spectrum
@@ -62,7 +63,8 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                                                               p0_initial=None, 
                                                               RV_prefit=True, blaze_normalized=True,\
                                                               RV_array=RV_array, bounds_set=bounds_set,\
-                                                              order_choice=order_choice, RV_range=RV_range)
+                                                              order_choice=order_choice, RV_range=RV_range,
+                                                              poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
         RV_array = np.array([popt_best[-1]])
 
     # we then fit for all the orders
@@ -87,7 +89,8 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                                                           wavelength, prefit_model,
                                                           p0_initial=p0_initial, 
                                                           RV_prefit=False, blaze_normalized=True,\
-                                                          RV_array=RV_array, bounds_set=bounds_set, RV_range=RV_range)
+                                                          RV_array=RV_array, bounds_set=bounds_set, RV_range=RV_range,
+                                                          poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
 
     # using this fit, we can subtract the raw spectrum with the best fit model of the normalized spectrum
     # with which we can then estimate the continuum for the raw specturm
@@ -106,7 +109,8 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                                                           wavelength, model,
                                                           p0_initial=p0_initial, bounds_set=bounds_set,\
                                                           RV_prefit=False, blaze_normalized=False,\
-                                                          RV_array=RV_array, RV_range=RV_range)
+                                                          RV_array=RV_array, RV_range=RV_range,
+                                                          poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
     return popt_best, model_spec_best, chi_square
 
 #------------------------------------------------------------------------------------------
@@ -190,7 +194,8 @@ def fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
                  wavelength, model, \
                  p0_initial=None, bounds_set=None,\
                  RV_prefit=False, blaze_normalized=False, RV_array=np.linspace(-1,1.,6),\
-                 order_choice=[20], RV_range=500):
+                 order_choice=[20], RV_range=500,
+                 poly_coeff_min=-1000, poly_coeff_max=1000):
 
     '''
     Fitting MIKE spectrum
@@ -289,7 +294,8 @@ def fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
             p0 = p0_initial
 
         # set fitting bound
-        bounds = model.get_initial_bounds(bounds_set, rvmin=100*RV_array[i]-RV_range, rvmax=100*RV_array[i]+RV_range)
+        bounds = model.get_initial_bounds(bounds_set, rvmin=100*RV_array[i]-RV_range, rvmax=100*RV_array[i]+RV_range,
+                                          poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
 
         if (not(bounds_set is None)) and (p0_initial is None):
             p0[:model.num_stellar_labels] = np.mean(bounds_set[:,:model.num_stellar_labels], axis=0)
@@ -304,9 +310,14 @@ def fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
             res = least_squares(fit_func, p0,
                                 bounds=bounds, ftol=tol, xtol=tol, method='trf')
         except ValueError as e:
-            print("Error: p0 = ",p0)
-            print("bounds min = ",bounds[0])
-            print("bounds max = ",bounds[1])
+            print("Error in optimization")
+            #print("Error: p0 = ",p0)
+            #print("bounds min = ",bounds[0])
+            #print("bounds max = ",bounds[1])
+            for i, (_p0, _b0, _b1) in enumerate(zip(p0, bounds[0], bounds[1])):
+                if _p0 <= _b0 or _p0 >= _b1:
+                    print(f"Bad param {i}: fit {_p0} lower {_b0} upper {_b1}")
+            print("If this is a continuum coefficient, you can change poly_coeff_min/max")
             raise(e)
 
         if not res.success:

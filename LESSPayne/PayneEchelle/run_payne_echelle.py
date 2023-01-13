@@ -68,6 +68,9 @@ def run_payne_echelle(cfg):
         pcfg["initial_parameters"]["MH"], pcfg["initial_parameters"]["aFe"]
     initial_stellar_labels = [Teff0, logg0, MH0, aFe0]
     
+    poly_coeff_min = pcfg.get("poly_coeff_min",-1000)
+    poly_coeff_max = pcfg.get("poly_coeff_max",1000)
+
     ## Get initial RV
     if pcfg["initial_velocity"] is None:
         vcfg = cfg["autovelocity"]
@@ -141,7 +144,7 @@ def run_payne_echelle(cfg):
         if found: break
     else:
         raise RuntimeError(f"{specfname} does not have any of the target wavelengths: {rv_target_wavelengths}")
-    print("Median RV order wavelength: {np.median(wavelength[iorder]):.1f}")
+    print(f"Median RV order wavelength: {np.median(wavelength[iorder]):.1f}")
 
     start2 = time.time()
     print(f"Running with PayneEchelle ({NNpath})")
@@ -151,7 +154,8 @@ def run_payne_echelle(cfg):
     print("starting fit")
     out = fitting.fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                              model, initial_stellar_parameters=initial_stellar_labels,
-                             RV_array = RV_array, order_choice=[iorder])
+                             RV_array = RV_array, order_choice=[iorder],
+                             poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
     popt_best, model_spec_best, chi_square = out
     print(f"PayneEchelle Fit Took {time.time()-start2:.1f}")
     popt_print = model.transform_coefficients(popt_best)
