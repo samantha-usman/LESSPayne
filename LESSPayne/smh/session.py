@@ -1140,7 +1140,7 @@ class Session(BaseSession):
             raise
         else:
             self.metadata["stellar_parameters"] = deepcopy(saved_stellar_params)
-            self.set_stellar_parameters_errors("stat", Teff_error, logg_error, mh_error, vt_error)
+            self.set_stellar_parameters_errors("stat", Teff_error, logg_error, vt_error, mh_error)
             logger.info("Uncertainties: dTeff={:.0f} dlogg={:.2f} dvt={:.2f} dmh={:.2f}, took {:.1f}s".format(
                     Teff_error, logg_error, vt_error, mh_error, time.time()-start))
             if systematic_errors is not None:

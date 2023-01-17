@@ -50,8 +50,8 @@ class Interpolator(BaseInterpolator):
                 "otherwise specified.", StandardCompositionAssumed)
         elif len(point) == 4:
             point = list(point)
-            warnings.warn(
-                "Fourth stellar param is [alpha/Fe] = {}".format(point[3]))
+            #warnings.warn(
+            #    "Fourth stellar param is [alpha/Fe] = {}".format(point[3]))
 
         return super(self.__class__, self).interpolate(*point, **kwargs)
 

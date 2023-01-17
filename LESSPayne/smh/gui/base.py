@@ -348,7 +348,7 @@ class SMHSpecDisplay(mpl.MPLWidget):
     def key_press_model(self, event):
         selected_model = self.selected_model
         if selected_model is None: return None
-        logger.debug("key_press_model: {}".format(event.key))
+        #logger.debug("key_press_model: {}".format(event.key))
         key = event.key.lower()
         #if event.key not in "auf": return None
         if event.key == "a":
@@ -497,7 +497,7 @@ class SMHSpecDisplay(mpl.MPLWidget):
     def _remove_mask(self, selected_model, event):
         if self.session is None: return None
         # Called upon doubleclick
-        logger.debug("Removing mask")
+        #logger.debug("Removing mask")
         if selected_model.metadata["antimask_flag"]:
             ## Cannot remove antimasks properly
             logger.info("Cannot remove antimasks right now")

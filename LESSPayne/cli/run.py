@@ -7,6 +7,7 @@ from LESSPayne.autosmh.run_normalization import run_normalization
 from LESSPayne.autosmh.run_eqw_fit import run_eqw_fit
 from LESSPayne.autosmh.run_stellar_parameters import run_stellar_parameters
 from LESSPayne.autosmh.run_synth_fit import run_synth_fit
+from LESSPayne.autosmh.run_errors import run_errors
 
 if __name__=="__main__":
     start = time.time()
@@ -108,6 +109,8 @@ if __name__=="__main__":
     # Optional input: SP covariance matrix
     # Output: SMHR file with errors propagated
     # Optional output: 
+    if options.run_errors:
+        run_errors(cfg)
 
     print(f"Time to run LESSPayne: {time.time()-start:.1f}")
     
