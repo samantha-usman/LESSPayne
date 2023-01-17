@@ -32,6 +32,14 @@ def run_stellar_parameters(cfg):
             f"run_stellar_parameters method={spcfg['method']} is not valid\n(rpa_calibration, manual_all)"
         )
     
+    if spcfg.get("output_suffix") is None:
+        smh_outfname = smh_fname
+    else:
+        smh_outfname = smh_fname.replace(".smh", spcfg["output_suffix"]+".smh")
+    print(f"Reading from {smh_fname}, writing to {smh_outfname}")
+    if smh_fname == smh_outfname:
+        print("(Overwriting the file)")
+
     startall = time.time()
     
     ## Load results of normalization
@@ -98,7 +106,7 @@ def run_stellar_parameters(cfg):
         session.measure_abundances() # eqw
 
     ## Save
-    session.save(smh_fname, overwrite=True)
+    session.save(smh_outfname, overwrite=True)
     print(f"Total time run_stellar_parameters: {time.time()-startall:.1f}")
 
     ## Plot

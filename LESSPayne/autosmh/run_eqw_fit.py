@@ -28,6 +28,13 @@ def run_eqw_fit(cfg):
     max_fwhm = ecfg["max_fwhm"]
     linelist_fname = ecfg["eqw_linelist_fname"]
     linelist_extra_fname = ecfg["extra_eqw_linelist_fname"]
+    if ecfg.get("output_suffix") is None:
+        smh_outfname = smh_fname
+    else:
+        smh_outfname = smh_fname.replace(".smh", ecfg["output_suffix"]+".smh")
+    print(f"Reading from {smh_fname}, writing to {smh_outfname}")
+    if smh_fname == smh_outfname:
+        print("(Overwriting the file)")
 
     clear_all_existing_fits = ecfg["clear_all_existing_fits"]
     
@@ -82,7 +89,7 @@ def run_eqw_fit(cfg):
     session.add_to_notes(notes)
 
     ## Save
-    session.save(smh_fname, overwrite=True)
+    session.save(smh_outfname, overwrite=True)
     print(f"Total time to run all: {time.time()-startall:.1f}")
 
     ## Plot

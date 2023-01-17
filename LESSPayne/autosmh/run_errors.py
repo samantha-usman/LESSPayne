@@ -25,6 +25,14 @@ def run_errors(cfg):
     errcfg = cfg["run_errors"]
     print(errcfg)
     
+    if errcfg.get("output_suffix") is None:
+        smh_outfname = smh_fname
+    else:
+        smh_outfname = smh_fname.replace(".smh", errcfg["output_suffix"]+".smh")
+    print(f"Reading from {smh_fname}, writing to {smh_outfname}")
+    if smh_fname == smh_outfname:
+        print("(Overwriting the file)")
+
     startall = time.time()
     
     session = Session.load(smh_fname)
@@ -70,6 +78,6 @@ def run_errors(cfg):
     
     ## Save
     session.add_to_notes(notes)
-    session.save(smh_fname, overwrite=True)
+    session.save(smh_outfname, overwrite=True)
     print(f"Total time run_errors: {time.time()-startall:.1f}")
     

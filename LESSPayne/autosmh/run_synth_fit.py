@@ -133,6 +133,14 @@ def run_synth_fit(cfg):
     smooth_scale = scfg["smooth_scale"]
     maxiter = scfg["max_iter_each"]
     
+    if scfg.get("output_suffix") is None:
+        smh_outfname = smh_fname
+    else:
+        smh_outfname = smh_fname.replace(".smh", scfg["output_suffix"]+".smh")
+    print(f"Reading from {smh_fname}, writing to {smh_outfname}")
+    if smh_fname == smh_outfname:
+        print("(Overwriting the file)")
+
     notes = "run_synth_fit:\n"
     keys = ["max_fwhm","synthesis_linelist_fname","extra_synthesis_linelist_fname",
             "num_iter_all","smooth_approx","smooth_scale","max_iter_each"]
@@ -234,7 +242,7 @@ def run_synth_fit(cfg):
     session.add_to_notes(notes)
 
     ## Save
-    session.save(smh_fname, overwrite=True)
+    session.save(smh_outfname, overwrite=True)
     print(f"Total time run_synth_fit: {time.time()-startall:.1f}")
 
     ## Plot

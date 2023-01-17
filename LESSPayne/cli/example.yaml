@@ -68,6 +68,7 @@ run_eqw_fit:
   mask_thresh: 0.15
   clear_all_existing_fits: True
   save_figure: False
+  output_suffix: null
 run_stellar_parameters:
   method: rpa_calibration
   manual_Teff: 4600
@@ -77,6 +78,7 @@ run_stellar_parameters:
   manual_aFe: 0.4
   measure_eqw_abundances: True
   save_figure_eqw: True
+  output_suffix: null
 run_synth_fit:
   max_fwhm: 1.0
   # Note: check the paths in the master list to make sure they're right!
@@ -99,6 +101,7 @@ run_synth_fit:
   # use_EuFe_for_rproc: True
   clear_all_existing_syntheses: False
   save_figure: True
+  output_suffix: null
 run_errors:
   calculate_stellar_params_spectroscopic_uncertainties: False
   e_Teff: 50
@@ -106,4 +109,5 @@ run_errors:
   e_vt: 0.1
   e_MH: 0.1
   save_figure: True
+  output_suffix: null
 run_plot:
