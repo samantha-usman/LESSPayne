@@ -7,6 +7,8 @@ from .read_spectrum import read_carpy_fits
 from . import spectral_model
 import pickle
 
+import pkg_resources
+#DATA_PATH = pkg_resources.resource_filename('LESSPayne', 'data/')
 
 #=======================================================================================================================
 
@@ -25,21 +27,11 @@ def read_in_neural_network():
     read in the weights and biases parameterizing a particular neural network.
     '''
 
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'other_data/NN_normalized_spectra_float16.npz')
+    path = pkg_resources.resource_filename('LESSPayne', 'data/NN_normalized_spectra_float16_fixwave.npz')
     NN_coeffs, wavelength_payne = read_in_nn_path(path)
-    wavelength_payne = vac2air(wavelength_payne)
+    #wavelength_payne = vac2air(wavelength_payne)
     return NN_coeffs, wavelength_payne
 
-def read_in_neural_network_rpa1():
-    """ Hardcoded path for now """
-    path = "/home/aji/data1/rpa_stellarparams/rpa1_NN_normalized_spectra.npz"
-    NN_coeffs, wavelength_payne = read_in_nn_path(path)
-    w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max = NN_coeffs
-    x_min[0] = x_min[0]/1000. # oops messed this up when making the grid, will fix later
-    x_max[0] = x_max[0]/1000. # oops messed this up when making the grid, will fix later
-    NN_coeffs = w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max
-    return NN_coeffs, wavelength_payne
-    
 def read_in_nn_path(path):
     """
     Read in NN from a specified path
@@ -63,7 +55,8 @@ def read_default_model_mask(wavelength_payne=None):
         NN_coeffs, wavelength_payne = read_in_neural_network()
     
     errors_payne = np.zeros_like(wavelength_payne)
-    theory_mask = np.loadtxt(os.path.join(os.path.dirname(os.path.realpath(__file__)),'other_data/theory_mask.txt'))
+    theory_mask_path = pkg_resources.resource_filename('LESSPayne', 'data/theory_mask.txt')
+    theory_mask = np.loadtxt(theory_mask_path)
     for wmin, wmax in theory_mask:
         assert wmin < wmax, (wmin, wmax)
         errors_payne[(wavelength_payne >= wmin) & (wavelength_payne <= wmax)] = 999.
@@ -89,7 +82,8 @@ def read_gaia_eso_benchmark_mask(Nmask=11, thresh=0.8):
     assert thresh in thresholds, thresholds
     thresh_ix = thresholds.index(thresh)
     
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'other_data/gaia_eso_benchmark_mask_info.pkl')
+    ## NOTE: this doesn't exist right now
+    path = pkg_resources.resource_filename('LESSPayne', 'data/gaia_eso_benchmark_mask_info.pkl')
     with open(path, "rb") as fp:
         all_masks = pickle.load(fp)
     assert len(thresholds) == all_masks.shape[0]
@@ -110,7 +104,7 @@ def read_in_example():
     read in a default spectrum to be fitted.
     '''
 
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'other_data/2M06062375-0639010_red_multi.fits')
+    path = pkg_resources.resource_filename('LESSPayne', 'data/spectra/2M06062375-0639010_red_multi.fits')
     wavelength, spectrum, spectrum_err = read_carpy_fits(path)
     return wavelength, spectrum, spectrum_err
 
@@ -123,7 +117,7 @@ def read_in_blaze_spectrum():
     read in a default hot star spectrum to determine telluric features and blaze function.
     '''
 
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'other_data/Hot_Star_HR718.fits')
+    path = pkg_resources.resource_filename('LESSPayne', 'data/spectra/Hot_Star_HR718.fits')
     wavelength_blaze, spectrum_blaze, spectrum_err_blaze = read_carpy_fits(path)
     return wavelength_blaze, spectrum_blaze, spectrum_err_blaze
 
@@ -273,47 +267,4 @@ def normalize_stellar_parameter_labels(labels, NN_coeffs=None):
     return new_labels
 
 #---------------------------------------------------------------------
-
-def read_default_model_mask_rpa1():
-    NN_coeffs, wavelength_payne = read_in_neural_network_rpa1()
-    errors_payne = np.zeros_like(wavelength_payne)
-    theory_mask = np.loadtxt(os.path.join(os.path.dirname(os.path.realpath(__file__)),'other_data/theory_mask.txt'))
-    for wmin, wmax in theory_mask:
-        assert wmin < wmax, (wmin, wmax)
-        errors_payne[(wavelength_payne >= wmin) & (wavelength_payne <= wmax)] = 999.
-    return errors_payne
-
-def transform_coefficients_rpa1(popt, NN_coeffs=None):
-
-    '''
-    Transform coefficients into human-readable
-    '''
-
-    if NN_coeffs is None:
-        NN_coeffs, dummy = read_in_neural_network_rpa1()
-    w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max = NN_coeffs
-    
-    popt_new = popt.copy()
-    popt_new[:6] = (popt_new[:6] + 0.5)*(x_max-x_min) + x_min
-    popt_new[0] = popt_new[0]*1000.
-    popt_new[-1] = popt_new[-1]*100.
-    return popt_new
-
-def normalize_stellar_parameter_labels_rpa1(labels, NN_coeffs=None):
-    '''
-    Turn physical stellar parameter values into normalized values.
-    Teff (K), logg (dex), FeH (solar), aFe (solar)
-    '''
-    assert len(labels)==6, "Input Teff, logg, vt, FeH, aFe, CFe"
-    # Teff, logg, FeH, aFe = labels
-    labels = np.ravel(labels)
-    labels[0] = labels[0]/1000.
-
-    if NN_coeffs is None:
-        NN_coeffs, dummy = read_in_neural_network_rpa1()
-    w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max = NN_coeffs
-    new_labels = (labels - x_min) / (x_max - x_min) - 0.5
-    assert np.all(np.round(new_labels,3) >= -0.51), (new_labels, labels)
-    assert np.all(np.round(new_labels,3) <=  0.51), (new_labels, labels)
-    return new_labels
 
