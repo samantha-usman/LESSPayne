@@ -639,8 +639,8 @@ def penalized_curve_fit_lm(f, xdata, ydata,
     except ValueError as e:
         print("Probably error in covariance matrix")
         print(e)
-        print(popt)
-        print(res.jac)
+        print("popt",popt)
+        print("number nans in jacobian",np.isnan(res.jac).sum())
         raise RuntimeError("Optimal parameters not found: " + res.message)
     threshold = np.finfo(float).eps * max(res.jac.shape) * s[0]
     s = s[s > threshold]
