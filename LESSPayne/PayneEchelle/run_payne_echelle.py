@@ -68,6 +68,9 @@ def run_payne_echelle(cfg):
         pcfg["initial_parameters"]["MH"], pcfg["initial_parameters"]["aFe"]
     initial_stellar_labels = [Teff0, logg0, MH0, aFe0]
     
+    poly_coeff_min = pcfg.get("poly_coeff_min",-1000)
+    poly_coeff_max = pcfg.get("poly_coeff_max",1000)
+
     ## Get initial RV
     if pcfg["initial_velocity"] is None:
         vcfg = cfg["autovelocity"]
@@ -79,7 +82,7 @@ def run_payne_echelle(cfg):
         print(f"Automatic velocity from {rv_wave1:.0f}-{rv_wave2:.0f}: {rv0:.1f} (+ {vhelcorr:.1f} for vhel)")
     else:
         rv0 = float(pcfg["initial_velocity"])
-        print(f"Initial RV {initial_rv:.1f}")
+        print(f"Initial RV {rv0:.1f}")
     
     ## Preprocess the spectrum
     wavelength, spectrum, spectrum_err = read_spectrum(specfname)
@@ -141,17 +144,18 @@ def run_payne_echelle(cfg):
         if found: break
     else:
         raise RuntimeError(f"{specfname} does not have any of the target wavelengths: {rv_target_wavelengths}")
-    print("Median RV order wavelength: {np.median(wavelength[iorder]):.1f}")
+    print(f"Median RV order wavelength: {np.median(wavelength[iorder]):.1f}")
 
     start2 = time.time()
-    print("Running with Payne4MIKE ({NNpath})")
+    print(f"Running with PayneEchelle ({NNpath})")
     model = DefaultPayneModel.load(NNpath, num_order=norder)
     errors_payne = utils.read_default_model_mask(wavelength_payne=model.wavelength_payne)
     model = DefaultPayneModel.load(NNpath, num_order=norder, errors_payne=errors_payne)
     print("starting fit")
     out = fitting.fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                              model, initial_stellar_parameters=initial_stellar_labels,
-                             RV_array = RV_array, order_choice=[iorder])
+                             RV_array = RV_array, order_choice=[iorder],
+                             poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
     popt_best, model_spec_best, chi_square = out
     print(f"PayneEchelle Fit Took {time.time()-start2:.1f}")
     popt_print = model.transform_coefficients(popt_best)

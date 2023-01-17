@@ -137,11 +137,12 @@ class SpectralModel(object):
         return p0_initial
     def get_initial_bounds(self, bounds_set=None,
                            vbroadmin=0.1, vbroadmax=10,
-                           rvmin=-500, rvmax=500):
+                           rvmin=-500, rvmax=500,
+                           poly_coeff_min=-1000, poly_coeff_max=1000):
         bounds = np.zeros((2, self.num_all_labels))
         # polynomial coefficients
-        bounds[0,self.num_stellar_labels:] = -1000 
-        bounds[1,self.num_stellar_labels:] = 1000
+        bounds[0,self.num_stellar_labels:] = poly_coeff_min
+        bounds[1,self.num_stellar_labels:] = poly_coeff_max
         
         if bounds_set is None:
             bounds[0,:self.num_stellar_labels] = -0.5

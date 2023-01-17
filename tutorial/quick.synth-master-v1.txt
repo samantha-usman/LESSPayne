@@ -1,0 +1,5 @@
+wavelength, species, expot,  loggf, type, filename
+  4215.524,    38.1, 0.000,  -0.17,  syn, ./synthesis_lists/lin4215srIIrpa.txt
+  4554.029,    56.1, 0.000,  0.140,  syn, ./synthesis_lists/lin4554baIIrpa.txt
+  4129.720,    63.1, 0.000,   0.22,  syn, ./synthesis_lists/lin4129euIIrpa.txt
+    4323.0,   106.0,   nan,    nan,  syn, ./synthesis_lists/CH4323.moog

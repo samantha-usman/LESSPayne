@@ -10,6 +10,8 @@ from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesis
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
 from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel
 
+from .run_eqw_fit import plot_eqw_grid
+
 def run_stellar_parameters(cfg):
     name = cfg["output_name"]
     NNpath = cfg["NN_file"]
@@ -99,3 +101,11 @@ def run_stellar_parameters(cfg):
     session.save(smh_fname, overwrite=True)
     print(f"Total time run_stellar_parameters: {time.time()-startall:.1f}")
 
+    ## Plot
+    if spcfg["save_figure_eqw"]:
+        figoutname = os.path.join(figdir, f"{name}_eqw.png")
+        start = time.time()
+        plot_eqw_grid(session, figoutname, name)
+        print(f"Time to save eqw figure: {time.time()-start:.1f}")
+        
+    

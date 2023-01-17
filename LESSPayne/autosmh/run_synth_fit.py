@@ -10,6 +10,8 @@ from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesis
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
 from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel
 
+from .plotting import plot_summary_1, plot_summary_2, plot_model_fit, plot_model_resid, get_line_table
+
 def update_abundance_table(session, model):
     """ Set [X/M] = 0 by default """
     assert isinstance(model, SpectralSynthesisModel)
@@ -234,3 +236,54 @@ def run_synth_fit(cfg):
     ## Save
     session.save(smh_fname, overwrite=True)
     print(f"Total time run_synth_fit: {time.time()-startall:.1f}")
+
+    ## Plot
+    if scfg["save_figure"]:
+        figoutname = os.path.join(figdir, f"{name}_synth.png")
+        start = time.time()
+        plot_synth_grid(session, figoutname, name)
+        print(f"Time to save figure: {time.time()-start:.1f}")
+
+def plot_synth_grid(session, outfname, name,
+                    Ncol=3, width=10, height=4, dpi=150,
+                    inset_dwl=1):
+    ## Plots all the residuals underneath the fits
+    import matplotlib.pyplot as plt
+    syn_models = [m for m in session.spectral_models if isinstance(m, SpectralSynthesisModel)]
+    N = len(syn_models) + 1
+    Nrow = (N // Ncol) + int(N % Ncol > 0) # Number of rows
+    Nrow = Nrow*2
+    assert Nrow*Ncol >= 2*N, (Nrow,Ncol,N)
+    
+    ltab = get_line_table(session, True)
+    
+    fig, axes = plt.subplots(Nrow, Ncol, figsize=(width*Ncol, height*Nrow))
+    plot_summary_1(axes[0,0], session, ltab, name)
+    plot_summary_2(axes[1,0], session, ltab)
+    irow = 0
+    icol = 1
+    for i, model in enumerate(syn_models):
+        ax1 = axes[irow*2,   icol]
+        ax2 = axes[irow*2+1, icol]
+        label = f"{utils.species_to_element(model.species[0]).replace(' ','')}{model.wavelength:.0f}"
+        
+        try:
+            plot_model_fit(ax1, session, model, label=label,
+                           linewave = model.wavelength, inset_dwl=inset_dwl)
+            plot_model_resid(ax2, session, model, label=label,
+                             linewave = model.wavelength)
+        except Exception as e:
+            print("Error:",model.species,model.wavelength)
+            print(e)
+            print("Skipping...")
+            
+        icol += 1
+        if icol == Ncol:
+            icol = 0
+            irow += 1
+    
+    fig.tight_layout()
+    fig.subplots_adjust(top=.96, wspace=0.15, hspace=.15)
+    fig.suptitle(name, fontsize=30, weight='bold', fontfamily='monospace',color='k')
+    fig.savefig(outfname, dpi=dpi)
+    plt.close(fig)
