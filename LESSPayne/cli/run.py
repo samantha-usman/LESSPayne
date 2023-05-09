@@ -8,6 +8,8 @@ from LESSPayne.autosmh.run_eqw_fit import run_eqw_fit
 from LESSPayne.autosmh.run_stellar_parameters import run_stellar_parameters
 from LESSPayne.autosmh.run_synth_fit import run_synth_fit
 from LESSPayne.autosmh.run_errors import run_errors
+#from LESSPayne.autosmh.run_summary import run_summary
+
 
 if __name__=="__main__":
     start = time.time()
@@ -21,6 +23,7 @@ if __name__=="__main__":
     parser.add_option("-4", "--params", dest="run_stellar_parameters", action="store_true", default=False)
     parser.add_option("-5", "--synth", dest="run_synthesis", action="store_true", default=False)
     parser.add_option("-6", "--errors", dest="run_errors", action="store_true", default=False)
+    parser.add_option("-7", "--summary", dest="run_summary", action="store_true", default=False)
     
     (options, args) = parser.parse_args()
     
