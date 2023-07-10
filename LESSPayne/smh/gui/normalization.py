@@ -729,7 +729,7 @@ class NormalizationTab(QtGui.QWidget):
                 np.array([xy[0,0], xy[2, 0]]).reshape(-1, 2), _))
             
             
-            print("exclude",self._cache["input"]["exclude"])
+            #print("exclude",self._cache["input"]["exclude"])
 
             # Fit and re-draw the continuum, and its mask.
             self.fit_continuum(clobber=True)
