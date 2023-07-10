@@ -1128,7 +1128,7 @@ class NormalizationTab(QtGui.QWidget):
         return None
 
 
-    def update_normalization_function(self):
+    def update_normalization_function(self, refresh=True):
         """ Update the normalization function. """
         self._cache["input"]["function"] = self.function.currentText()
 
@@ -1155,8 +1155,9 @@ class NormalizationTab(QtGui.QWidget):
 
 
         self.reset_input_style_defaults()
-        self.fit_continuum(True)
-        self.draw_continuum(True)
+        if refresh:
+            self.fit_continuum(True)
+            self.draw_continuum(True)
         return None
 
 
@@ -1242,6 +1243,8 @@ class NormalizationTab(QtGui.QWidget):
         """
         Check whether the current input settings reflect the settings used to
         normalize the currently displayed order.
+
+        2023-07-10 APJ made it so it just updates the display, instead of highlighting
         """
 
         session, index = self.parent.session, self.current_order_index
@@ -1285,8 +1288,35 @@ class NormalizationTab(QtGui.QWidget):
         diff = dict_updated(self._cache["input"], normalization_kwargs,
             exclude=("additional_points", "exclude"))
 
+        # update the cache values
+        self._cache["input"].update(normalization_kwargs)
+        # update the view for all textboxes
+        self.low_sigma_clip.setText(str(self._cache["input"]["low_sigma_clip"]))
+        self.high_sigma_clip.setText(str(self._cache["input"]["high_sigma_clip"]))
+        self.knot_spacing.setText(str(self._cache["input"]["knot_spacing"]))
+        self.blue_trim.setText(str(self._cache["input"]["blue_trim"]))
+        self.red_trim.setText(str(self._cache["input"]["red_trim"]))
+        # update the view for dropdown boxes
+        functions = [self.function.itemText(i).lower() \
+            for i in range(self.function.count())]
+        orders = [int(self.order.itemText(i)) \
+            for i in range(self.order.count())]
+        norm_max_iters = [int(self.norm_max_iter.itemText(i)) \
+            for i in range(self.norm_max_iter.count())]
+        #print(functions, orders, norm_max_iters)
+        self.function.setCurrentIndex(functions.index(
+            self._cache["input"]["function"].lower()))
+        self.order.setCurrentIndex(orders.index(
+            self._cache["input"]["order"]))
+        self.norm_max_iter.setCurrentIndex(norm_max_iters.index(
+            self._cache["input"]["max_iterations"]))
+        ## Update the valid order numbers in the GUI
+        self.update_normalization_function(False)
+        
         # By default, everything should be styled normally.
         self.reset_input_style_defaults(sum(input_items.values(), []))
+
+        """
         for key, (current, used) in diff.items():
             if key in input_items:
                 # Update the font-weight of those objects.
@@ -1297,6 +1327,7 @@ class NormalizationTab(QtGui.QWidget):
                     item.setStatusTip("Order {0} was normalized using {1} ="
                         " {2} (not {3})"\
                         .format(1 + index, key, used, current))
+        """
 
             
         return None
