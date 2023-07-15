@@ -55,7 +55,7 @@ def read_default_model_mask(wavelength_payne=None):
         NN_coeffs, wavelength_payne = read_in_neural_network()
     
     errors_payne = np.zeros_like(wavelength_payne)
-    theory_mask_path = pkg_resources.resource_filename('LESSPayne', 'data/theory_mask.txt')
+    theory_mask_path = pkg_resources.resource_filename('LESSPayne', 'PayneEchelle/other_data/theory_mask.txt')
     theory_mask = np.loadtxt(theory_mask_path)
     for wmin, wmax in theory_mask:
         assert wmin < wmax, (wmin, wmax)

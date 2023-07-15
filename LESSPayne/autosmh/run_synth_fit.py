@@ -4,7 +4,7 @@ import yaml
 from copy import deepcopy
 from scipy.ndimage import gaussian_filter1d
 
-from LESSPayne.smh import Session
+from LESSPayne.smh import Session, utils
 from LESSPayne.specutils import Spectrum1D 
 from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesisModel
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition

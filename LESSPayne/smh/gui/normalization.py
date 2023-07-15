@@ -479,7 +479,7 @@ class NormalizationTab(QtGui.QWidget):
                 clip = max(clip-0.05, 0)
             if event.key == "down":
                 clip += 0.05
-            self._cache["input"]["high_sigma_clip"] = clip
+            self._cache["input"]["high_sigma_clip"] = round(clip,2)
             self.high_sigma_clip.setText(
                 str(self._cache["input"]["high_sigma_clip"]))
             

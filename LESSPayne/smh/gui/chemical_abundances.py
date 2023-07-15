@@ -1526,12 +1526,12 @@ class ChemicalAbundancesTab(QtGui.QWidget):
         return None
 
     def key_press_automask_sigma(self, event):
-        if event.key in ["9","0"]:
+        if event.key in ["9","0",",","."]:
             selected_model, proxy_index, index = self._get_selected_model(True)
             if not isinstance(selected_model, ProfileFittingModel): return None
-            if event.key == "0":
+            if (event.key == "0") or (event.key == "."):
                 selected_model.metadata["detection_sigma"] += 0.5
-            elif event.key == "9":
+            elif (event.key == "9") or (event.key == ","):
                 selected_model.metadata["detection_sigma"] -= 0.5
             self.fit_one()
     
