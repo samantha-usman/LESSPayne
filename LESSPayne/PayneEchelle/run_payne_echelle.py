@@ -70,6 +70,7 @@ def run_payne_echelle(cfg):
     
     poly_coeff_min = pcfg.get("poly_coeff_min",-1000)
     poly_coeff_max = pcfg.get("poly_coeff_max",1000)
+    polynomial_order = pcfg.get("polynomial_order",6)
 
     ## Get initial RV
     if pcfg["initial_velocity"] is None:
@@ -150,7 +151,8 @@ def run_payne_echelle(cfg):
     print(f"Running with PayneEchelle ({NNpath})")
     model = DefaultPayneModel.load(NNpath, num_order=norder)
     errors_payne = utils.read_default_model_mask(wavelength_payne=model.wavelength_payne)
-    model = DefaultPayneModel.load(NNpath, num_order=norder, errors_payne=errors_payne)
+    model = DefaultPayneModel.load(NNpath, num_order=norder, errors_payne=errors_payne,
+                                   polynomial_order=polynomial_order)
     print("starting fit")
     out = fitting.fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                              model, initial_stellar_parameters=initial_stellar_labels,
