@@ -210,12 +210,23 @@ def run_normalization(cfg):
     blue_trim = ncfg["blue_trim"]
     red_trim = ncfg["red_trim"]
     ## default spline kws
-    default_kwds = dict(
-        function="spline",
-        order=ncfg["continuum_spline_order"], max_iterations=ncfg["continuum_max_iterations"],
-        full_output=True,
-        blue_trim=None, red_trim=None,
-    )
+    function = ncfg.get("function","spline")
+    if function == "spline":
+        default_kwds = dict(
+            function="spline",
+            order=ncfg["continuum_spline_order"], max_iterations=ncfg["continuum_max_iterations"],
+            full_output=True,
+            blue_trim=None, red_trim=None,
+        )
+    elif function == "polynomial":
+        default_kwds = dict(
+            function="polynomial",
+            order=ncfg["continuum_spline_order"], max_iterations=ncfg["continuum_max_iterations"],
+            full_output=True,
+            blue_trim=None, red_trim=None,
+        )
+    else:
+        raise ValueError(f"normalization function = {function}")
     ## Saving these to the session
     normalization_parameters = {}
     notes = f"run_normalization parameters:\n  {popt_fname}\n"
