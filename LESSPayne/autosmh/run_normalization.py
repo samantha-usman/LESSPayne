@@ -119,7 +119,7 @@ def merge_exclude_regions(super_wave, exclude_regions, Nwave):
     all_exclude_regions = [[super_wave[start], super_wave[stop]] for start, stop in zip(starts, stops)]
     return all_exclude_regions
 
-def get_normalization_keywords(spec):
+def get_normalization_keywords(spec, ncfg):
     """
     Sets knot spacing and sigma clipping
     """
@@ -128,23 +128,48 @@ def get_normalization_keywords(spec):
     wc = (w1+w2)/2
 
     ## Knot Spacing
-    if wc < 6800:
+    default_knot_spacing = ncfg.get("default_knot_spacing", 15)
+    ## parameters for setting knot spacing based on wavelength
+    # Format: [(w1,w2,ks), (w1,w2,ks)]
+    knot_wave_list = ncfg.get("knot_wave_list",
+                              [(3000, 6800, 15), (6800, 10000, 25)])
+    for (kwave1, kwave2, kspace) in knot_wave_list:
+        if (wc > kwave1) & (wc <= kwave2):
+            knot_spacing = kspace
+            break
+    else:
         knot_spacing = 15
-    else: # tellurics and red and fewer lines
-        knot_spacing = 25
+    ## The above should re-implement this by default
+    # if wc < 6800:
+    #     knot_spacing = 15
+    # else: # tellurics and red and fewer lines
+    #     knot_spacing = 25
     
     ## Sigma clip. These are hardcoded for now. TODO PUT INTO CFG
     snr = np.nanmedian(spec.flux * spec.ivar**.5)
-    if snr < 5:
-        high_sigma_clip = 1.0
-        low_sigma_clip = 2.0
+    if snr < ncfg.get("lowsnr_snr_threshold", 5.0):
+        high_sigma_clip = ncfg.get("lowsnr_high_sigma_clip",1.0)
+        low_sigma_clip = ncfg.get("lowsnr_low_sigma_clip",2.0)
     else:
-        if wc > 4600:
+        sigma_clip_wave_list = ncfg.get("sigma_clip_wave_list",
+            [(3000, 1000, 1.0, 5.0)])
+        #sigma_clip_wave_list = ncfg.get("sigma_clip_wave_list",
+        #    [(3000, 4600, 1.0, 5.0), (4600, 1000, 0.5, 5.0)])
+        for (kwave1, kwave2, hiclip, loclip) in sigma_clip_wave_list:
+            if (wc > kwave1) & (wc <= kwave2):
+                high_sigma_clip = hiclip
+                low_sigma_clip = loclip
+                break
+        else:
             high_sigma_clip = 1.0
             low_sigma_clip = 5.0
-        else:
-            high_sigma_clip = 0.5
-            low_sigma_clip = 5.0
+        ## the above should implement something like this
+        # if wc > 4600:
+        #     high_sigma_clip = 1.0
+        #     low_sigma_clip = 5.0
+        # else:
+        #     high_sigma_clip = 0.5
+        #     low_sigma_clip = 5.0
     
     return knot_spacing, high_sigma_clip, low_sigma_clip
 
@@ -227,6 +252,9 @@ def run_normalization(cfg):
         )
     else:
         raise ValueError(f"normalization function = {function}")
+    
+    
+
     ## Saving these to the session
     normalization_parameters = {}
     notes = f"run_normalization parameters:\n  {popt_fname}\n"
@@ -342,7 +370,7 @@ def run_normalization(cfg):
         spec._dispersion *= (1 - v/299792458e-3) # km/s
 
         # Adjust normalization keywords for this order
-        knot_spacing, high_sigma_clip, low_sigma_clip = get_normalization_keywords(spec)
+        knot_spacing, high_sigma_clip, low_sigma_clip = get_normalization_keywords(spec, ncfg)
         kwds["high_sigma_clip"] = high_sigma_clip
         kwds["low_sigma_clip"] = low_sigma_clip
 
@@ -377,8 +405,8 @@ def run_normalization(cfg):
                 print(f"Could not succeed in checking knots, stopping at it={it+1}")
                 print(e)
         kwds["knot_spacing"] = knot_spacing
-
-
+        
+        
         try:
             norm, cont, left, right = spec.fit_continuum(**kwds)
         except:
