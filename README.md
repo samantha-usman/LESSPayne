@@ -29,7 +29,7 @@ Currently (as of May 2022) anaconda on M1/ARM chips by default includes channels
 Also, newer versions of pyside2 appear to have changed some syntax on dialog boxes. We will update this eventually but for now you can install the older pyside2 version.
 We are also forced to use older versions of numpy and matplotlib to maintain compatability.
 
-For older Macs or Linux, it should work to just remove osx-64 from the above
+For older Macs or Linux, it should work to just remove `/osx-64` and `python.app` from the above
 
 * Download and install this branch:
 ```
