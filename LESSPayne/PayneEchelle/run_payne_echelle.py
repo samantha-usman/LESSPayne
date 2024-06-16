@@ -157,8 +157,9 @@ def run_payne_echelle(cfg):
     out = fitting.fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                              model, initial_stellar_parameters=initial_stellar_labels,
                              RV_array = RV_array, order_choice=[iorder],
-                             poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
-    popt_best, model_spec_best, chi_square = out
+                             poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max,
+                             get_perr=True)
+    popt_best, model_spec_best, chi_square, perr_best = out
     print(f"PayneEchelle Fit Took {time.time()-start2:.1f}")
     popt_print = model.transform_coefficients(popt_best)
     print("[Teff [K], logg, Fe/H, Alpha/Fe] = ",\
@@ -173,6 +174,7 @@ def run_payne_echelle(cfg):
     
     np.savez(outfname_bestfit,
              popt_best=popt_best,
+             perr_best=perr_best,
              popt_print=popt_print,
              model_spec_best=model_spec_best,
              chi_square=chi_square,

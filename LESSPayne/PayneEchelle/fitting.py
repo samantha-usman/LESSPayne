@@ -4,6 +4,7 @@ import numpy as np
 from scipy.optimize import curve_fit, least_squares
 from scipy import interpolate
 from scipy import signal
+from scipy import linalg
 from scipy.stats import norm
 from . import spectral_model
 from . import utils
@@ -19,7 +20,8 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                bounds_set=None,
                initial_stellar_parameters=None,
                skip_rv_prefit=False, RV_range=500,
-               poly_coeff_min=-1000, poly_coeff_max=1000):
+               poly_coeff_min=-1000, poly_coeff_max=1000,
+               get_perr=False):
 
     '''
     Fitting MIKE spectrum
@@ -58,7 +60,7 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                                    model.x_min, model.x_max,
                                    model.wavelength_payne, model.errors_payne,
                                    len(order_choice), default_rv_polynomial_order, 1)
-        popt_best, model_spec_best, chi_square = fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
+        popt_best, model_spec_best, chi_square, perr = fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
                                                               wavelength, rv_model,
                                                               p0_initial=None, 
                                                               RV_prefit=True, blaze_normalized=True,\
@@ -85,7 +87,7 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
     else:
         p0_initial = None
 
-    popt_best, model_spec_best, chi_square = fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
+    popt_best, model_spec_best, chi_square, perr = fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
                                                           wavelength, prefit_model,
                                                           p0_initial=p0_initial, 
                                                           RV_prefit=False, blaze_normalized=True,\
@@ -105,12 +107,14 @@ def fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                                  poly_initial.ravel(),
                                  popt_best[-2*model.num_chunk:]])
     
-    popt_best, model_spec_best, chi_square = fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
+    popt_best, model_spec_best, chi_square, perr = fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
                                                           wavelength, model,
                                                           p0_initial=p0_initial, bounds_set=bounds_set,\
                                                           RV_prefit=False, blaze_normalized=False,\
                                                           RV_array=RV_array, RV_range=RV_range,
                                                           poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
+    if get_perr:
+        return popt_best, model_spec_best, chi_square, perr
     return popt_best, model_spec_best, chi_square
 
 #------------------------------------------------------------------------------------------
@@ -323,6 +327,12 @@ def fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
         if not res.success:
             raise RuntimeError("Optimal parameters not found: " + res.message)
         popt = res.x
+        # Based on Yupeng's code and https://stackoverflow.com/questions/42388139/how-to-compute-standard-deviation-errors-with-scipy-optimize-least-squares
+        U, s, Vh = linalg.svd(res.jac, full_matrices=False)
+        tol = np.finfo(float).eps*s[0]*max(res.jac.shape)
+        w = s > tol
+        cov = (Vh[w].T/s[w]**2) @ Vh[w] # robust covariance matrix
+        perr = np.sqrt(np.diag(cov)) # 1sigma uncertainty on fitted parameters
 
         # calculate chi^2
         model_spec, model_errs = model.evaluate(popt, wavelength, wavelength_normalized)
@@ -337,4 +347,4 @@ def fitting_mike(spectrum, spectrum_err, spectrum_blaze,\
             model_spec_best = model_spec
             popt_best = popt
 
-    return popt_best, model_spec_best.reshape(num_order,num_pixel), chi_2
+    return popt_best, model_spec_best.reshape(num_order,num_pixel), chi_2, perr
