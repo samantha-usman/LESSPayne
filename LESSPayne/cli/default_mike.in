@@ -1,0 +1,112 @@
+output_directory: ./outputs
+figure_directory: ./figs
+output_name: '{name}'
+spectrum_fnames:
+- '{red_fname}'
+- '{blue_fname}'
+overwrite_files: True
+payne_fname: '{name}'_paynefit.npz
+smh_fname: '{name}'_lesspayne.smh
+NN_file: ./NN_normalized_spectra_float16_fixwave.npz
+# parameters for automatic velocity finding
+autovelocity:
+  template_spectrum_fname: ./hd122563.fits
+  wavelength_region_min: 5150
+  wavelength_region_max: 5200
+# parameters for automatic payne fit
+payne:
+  # automatically find the velocity from xcor
+  initial_velocity: null
+  # restrict the wavelength range
+  # the full allowed range is 3500-10000A
+  wmin: '{wmin}'
+  wmax: '{wmax}'
+  mask_list:
+  - - 6276
+    - 6320
+  - - 6866
+    - 6881
+  - - 6883
+    - 6962
+  - - 6985
+    - 7070
+  rv_target_wavelengths:
+  - 5183
+  - 4861
+  initial_parameters:
+    Teff: 4500
+    logg: 1.5
+    MH:   -2.0
+    aFe:  0.4
+  save_figures: True
+run_normalization:
+  # threshold for deciding whether to mask a line in the Payne model
+  mask_sigma: '{mask_sigma}'
+  # parameters for growing the mask size a bit
+  mask_smooth: '{mask_smooth}'
+  mask_thresh: '{mask_thresh}'
+  # maximum fraction of masked pixels per order; increases mask_sigma by 0.5 until reached
+  max_mask_frac: '{max_mask_frac}'
+  # minimum fraction of unmasked pixels/knot; increases knot_spacing by 2 until reached
+  min_frac_per_knot: '{min_frac_per_knot}'
+  # blue and red trim in pixels
+  blue_trim: '{blue_trim}'
+  red_trim: '{red_trim}'
+  # normalization kwargs
+  continuum_spline_order: 3
+  continuum_max_iterations: 5
+  # Flag to output a normalization figure
+  save_figure: True
+run_eqw_fit:
+  max_fwhm: '{max_fwhm}'
+  eqw_linelist_fname: '{eqw_linelist_fname}'
+  extra_eqw_linelist_fname: '{extra_eqw_linelist_fname}'
+  # threshold for deciding whether to mask a line in the Payne model
+  mask_sigma: '{mask_sigma}'
+  # parameters for growing the mask size a bit
+  mask_smooth: '{mask_smooth}'
+  mask_thresh: '{mask_thresh}'
+  clear_all_existing_fits: True
+  save_figure: False
+  output_suffix: null
+run_stellar_parameters:
+  method: rpa_calibration
+  manual_Teff: null
+  manual_logg: null
+  manual_vt: null
+  manual_MH: null
+  manual_aFe: null
+  measure_eqw_abundances: True
+  save_figure_eqw: True
+  output_suffix: null
+run_synth_fit:
+  max_fwhm: 1.0
+  # Note: check the paths in the master list to make sure they're right!
+  synthesis_linelist_fname: '{synthesis_linelist_fname}'
+  extra_synthesis_linelist_fname: '{extra_synthesis_linelist_fname}'
+  # number of times to iterate through fitting all syntheses
+  # the actual number of iterations is 2x this: the first set puts a smoothing prior,
+  # while the second set uses known abundances
+  # the runtime is essentially proportional to this x the number of synthesis lines
+  num_iter_all: '{num_iter_all}'
+  # each optimization takes a few times to minimize the chi2
+  max_iter_each: '{max_iter_each}'
+  # parameters for initial prior on smoothing in A
+  smooth_approx: '{smooth_approx}'
+  smooth_scale : '{smooth_scale}'
+  # Set O, Si, Ca, Ti to [Mg/Fe]: currently forced to be true, capped at +/- 0.4
+  # use_MgFe_for_aFe: True
+  # Set neutron-capture elements to r-process value: currently forced to be true
+  # use_EuFe_for_rproc: True
+  clear_all_existing_syntheses: False
+  save_figure: True
+  output_suffix: null
+run_errors:
+  calculate_stellar_params_spectroscopic_uncertainties: False
+  e_Teff: '{e_Teff}'
+  e_logg: '{e_logg}'
+  e_vt: '{e_vt}'
+  e_MH: '{e_MH}'
+  save_figure: True
+  output_suffix: null
+run_plot:
