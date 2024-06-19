@@ -8,13 +8,14 @@ from LESSPayne.smh import Session
 from LESSPayne.specutils import Spectrum1D 
 from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesisModel
 from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
-from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel
+from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel, YYLiPayneModel
 
 from .run_eqw_fit import plot_eqw_grid
 
 def run_stellar_parameters(cfg):
     name = cfg["output_name"]
     NNpath = cfg["NN_file"]
+    NNtype = cfg["NN_type"]
     outdir = cfg["output_directory"]
     figdir = cfg["figure_directory"]
     if not os.path.exists(outdir): os.makedirs(outdir)
@@ -47,30 +48,43 @@ def run_stellar_parameters(cfg):
     
     ## Step 7: initialize stellar parameters
     if spcfg["method"] == "rpa_calibration":
-        model = DefaultPayneModel.load(NNpath, 1)
-        with np.load(popt_fname) as tmp:
-            popt_best = tmp["popt_best"].copy()
-            popt_print = tmp["popt_print"].copy()
-        Teff, logg, MH, aFe = round(popt_print[0]), round(popt_print[1],2), round(popt_print[2],2), round(popt_print[3],2)
-        outstr1 = f"run_stellar_parameters:\n  PayneEchelle: T/g/v/M/a = {Teff}/{logg}/1.00/{MH}/{aFe}"
-        
-        ## Corrections from empirical fit to RPA duplicates
-        dT = -.0732691466 * Teff + 247.57
-        dg = 8.11486e-5 * logg - 0.28526
-        dM = -0.06242672*MH - 0.3167661
-        Teff, logg, MH = int(Teff - dT), round(logg - dg,2), round(MH - dM, 2)
-        
-        ## TODO
-        #if aFe > 0.2: aFe = 0.4
-        #else: aFe = 0.0
-        aFe = 0.4
-        
-        ## TODO offer different vt methods
-        #vt = round(2.13 - 0.23 * logg,2) # kirby09
-        vt = round(0.060 * logg**2 - 0.569*logg + 2.585, 2) # RPA duplicates
-
-        outstr2 = f"  Calibrated = {Teff}/{logg}/{vt}/{MH}/{aFe}"
-        session.add_to_notes(outstr1+"\n"+outstr2)
+        if NNtype == "default":
+            model = DefaultPayneModel.load(NNpath, 1)
+            with np.load(popt_fname) as tmp:
+                popt_best = tmp["popt_best"].copy()
+                popt_print = tmp["popt_print"].copy()
+            Teff, logg, MH, aFe = round(popt_print[0]), round(popt_print[1],2), round(popt_print[2],2), round(popt_print[3],2)
+            outstr1 = f"run_stellar_parameters:\n  PayneEchelle {NNpath}: T/g/v/M/a = {Teff}/{logg}/1.00/{MH}/{aFe}"
+            
+            ## Corrections from empirical fit to RPA duplicates
+            dT = -.0732691466 * Teff + 247.57
+            dg = 8.11486e-5 * logg - 0.28526
+            dM = -0.06242672*MH - 0.3167661
+            Teff, logg, MH = int(Teff - dT), round(logg - dg,2), round(MH - dM, 2)
+            
+            ## TODO
+            #if aFe > 0.2: aFe = 0.4
+            #else: aFe = 0.0
+            aFe = 0.4
+            
+            ## TODO offer different vt methods
+            #vt = round(2.13 - 0.23 * logg,2) # kirby09
+            vt = round(0.060 * logg**2 - 0.569*logg + 2.585, 2) # RPA duplicates
+    
+            outstr2 = f"  Calibrated = {Teff}/{logg}/{vt}/{MH}/{aFe}"
+            session.add_to_notes(outstr1+"\n"+outstr2)
+        elif NNtype == "yyli":
+            model = DefaultPayneModel.load(NNpath, 1)
+            with np.load(popt_fname) as tmp:
+                popt_best = tmp["popt_best"].copy()
+                popt_print = tmp["popt_print"].copy()
+            Teff, logg, vt, MH = round(popt_print[0]), round(popt_print[1],2), round(popt_print[2],2), round(popt_print[3],2)
+            CFe, MgFe, CaFe, TiFe = round(popt_print[4]), round(popt_print[5],2), round(popt_print[6],2), round(popt_print[7],2)
+            aFe = round((MgFe+CaFe+TiFe)/3., 2)
+            outstr1 = f"run_stellar_parameters:\n  PayneEchelleYYLi {NNpath}: T/g/v/M = {Teff}/{logg}/{vt}/{MH}"
+            outstr2 = f"  PayneEchelleYYLi {NNpath}: CFe/MgFe/CaFe/TiFe = {CFe}/{MgFe}/{CaFe}/{TiFe} (setting aFe=0.4 by default)"
+            aFe = 0.4 # TODO
+            session.add_to_notes(outstr1+"\n"+outstr2)
 
     elif spcfg["method"] == "manual_all":
         Teff = logg = vt = MH = aFe = None
