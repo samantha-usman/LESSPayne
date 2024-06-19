@@ -372,7 +372,7 @@ class DefaultMIKEModel(DefaultPayneModel):
             chunk_order_max=chunk_order_max
         )
 
-class YYLiNLTEPayneModel(SpectralModel):
+class YYLiPayneModel(SpectralModel):
     @staticmethod
     def load(fname, num_order, polynomial_order=6, errors_payne=None,
              num_chunk=1, chunk_order_min=None, chunk_order_max=None):
@@ -395,7 +395,7 @@ class YYLiNLTEPayneModel(SpectralModel):
         if errors_payne is None:
             errors_payne = np.zeros_like(wavelength_payne)
         
-        return YYLiNLTEPayneModel(
+        return YYLiPayneModel(
             NN_coeffs, num_stellar_labels, x_min, x_max,
             wavelength_payne, errors_payne,
             num_order, polynomial_order, num_chunk,
@@ -418,7 +418,6 @@ class YYLiNLTEPayneModel(SpectralModel):
         spectrum = np.einsum('ij,j->i', w_array_2, sigmoid(outside)) + b_array_2
         return sigmoid(spectrum)
     
-    ### TODO:
     ### Functions with default behavior you may want to redefine
     def get_p0_initial_normspec(self, initial_labels=None, initial_rv=0.0, initial_vbroad=0.5):
         """
