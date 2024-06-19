@@ -43,7 +43,9 @@ if __name__=="__main__":
         cfg = yaml.load(fp, yaml.FullLoader)
     print("Running cfg file:",cfg_file)
     print(cfg)
+    ## set defaults
     ## TODO: we should write out a CFG file with the defaults filled in
+    cfg.setdefault("NN_type","default")
     
     outdir = cfg["output_directory"]
     figdir = cfg["figure_directory"]

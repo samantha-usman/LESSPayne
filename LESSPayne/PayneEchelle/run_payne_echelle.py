@@ -47,7 +47,7 @@ def run_payne_echelle(cfg):
     
     name = cfg["output_name"]
     NNpath = cfg["NN_file"]
-    NNtype = cfg.get("NN_type","default")
+    NNtype = cfg["NN_type"]
     assert NNtype in ["default", "yyli"], NNtype
     outdir = cfg["output_directory"]
     figdir = cfg["figure_directory"]
