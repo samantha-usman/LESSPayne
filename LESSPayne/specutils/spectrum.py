@@ -102,7 +102,7 @@ class Spectrum1D(object):
 
 
     @classmethod
-    def read(cls, path, **kwargs):
+    def read(cls, path, debug=False, **kwargs):
         """
         Create a Spectrum1D class from a path on disk.
 
@@ -115,22 +115,24 @@ class Spectrum1D(object):
 
         # Try multi-spec first since this is currently the most common use case.
         methods = (
-            cls.read_fits_multispec,
-            cls.read_fits_spectrum1d,
-            cls.read_ascii_spectrum1d,
-            cls.read_alex_spectrum,
-            cls.read_multispec,
-            cls.read_ascii_spectrum1d_noivar
+            (cls.read_fits_multispec,"read_fits_multispec"),
+            (cls.read_fits_spectrum1d,"read_fits_spectrum1d"),
+            (cls.read_ascii_spectrum1d,"read_ascii_spectrum1d"),
+            (cls.read_alex_spectrum,"read_alex_spectrum"),
+            (cls.read_ceres,"read_ceres"),
+            (cls.read_multispec,"read_multispec"),
+            (cls.read_ascii_spectrum1d_noivar,"read_ascii_spectrum1d_noivar"),
         )
 
-        for method in methods:
+        for method, name in methods:
             try:
                 dispersion, flux, ivar, metadata = method(path, **kwargs)
-
+                
             except Exception as e:
-                #print("=====")
-                #print(method)
-                #print(e)
+                if debug:
+                    print("=====")
+                    print(name)
+                    print(e)
                 continue
 
             else:
@@ -168,12 +170,91 @@ class Spectrum1D(object):
         return (waves, fluxs, ivars, metadata)
 
     @classmethod
+    def write_alex_spectrum_from_specs(cls, path, specs, overwrite=False):
+        
+        Nspec = len(specs)
+        Npix = np.array([len(spec.dispersion) for spec in specs])
+        if not np.all(Npix[0] == Npix):
+            print("Not all spectra have the same number of pixels!")
+            print(Npix)
+            print("Padding with last wavelength of each order, zero flux, zero ivar")
+        Npix = np.max(Npix)
+        wave, flux, ivar = np.zeros((Nspec,Npix)), np.zeros((Nspec,Npix)), np.zeros((Nspec,Npix))
+        for i, spec in enumerate(specs):
+            N = len(spec.dispersion)
+            wave[i,0:N] = spec.dispersion
+            flux[i,0:N] = spec.flux
+            ivar[i,0:N] = spec.ivar
+            if N < Npix: wave[i,N:Npix] = spec.dispersion[-1]
+        #wave = np.array([spec.dispersion for spec in specs])
+        #flux = np.array([spec.flux for spec in specs])
+        #ivar = np.array([spec.ivar for spec in specs])
+        
+        ### Write a 3 extension fits file: wave, flux, ivar
+        # make the output array: 3 x Norder x Npix
+        outdata = np.array([wave, flux, ivar], dtype=float)
+
+        hdu = fits.PrimaryHDU(outdata)
+        
+        # header: add new BANDID
+        hdu.header["BANDID1"] = "wavelength array"
+        hdu.header["BANDID2"] = "flux array"
+        hdu.header["BANDID3"] = "ivar array"
+        
+        hdu.writeto(path, output_verify="fix", overwrite=overwrite)
+
+    @classmethod
+    def write_alex_spectrum_from_arrays(cls, path, wave, flux, ivar, overwrite=False):
+        
+        ### Write a 3 extension fits file: wave, flux, ivar
+        # make the output array: 3 x Norder x Npix
+        outdata = np.array([wave, flux, ivar], dtype=float)
+
+        hdu = fits.PrimaryHDU(outdata)
+        
+        # header: add new BANDID
+        hdu.header["BANDID1"] = "wavelength array"
+        hdu.header["BANDID2"] = "flux array"
+        hdu.header["BANDID3"] = "ivar array"
+        
+        hdu.writeto(path, output_verify="fix", overwrite=overwrite)
+
+    @classmethod
+    def read_ceres(cls, fname):
+        with fits.open(fname) as hdul:
+            assert len(hdul)==1, len(hdul)
+            header = hdul[0].header
+            assert header["PIPELINE"] == "CERES", header["PIPELINE"]
+            data = hdul[0].data
+            Nband, Norder, Npix = data.shape
+            # https://github.com/rabrahm/ceres
+            # by default it looks sorted from red to blue orders, so we'll flip it in the output
+            waves = data[0,::-1,:]
+            fluxs = data[1,::-1,:]
+            ivars = data[2,::-1,:]
+            # 3, 4 = blaze corrected flux and error
+            # 5, 6 = continuum normalized flux and error
+            # 7 = continuum
+            # 8 = s/n
+            # 9, 10 = Continumm normalized flux multiplied by the derivative of the wavelength with respect to the pixels + err
+
+            # Merge headers into a metadata dictionary.
+            metadata = OrderedDict()
+            for key, value in header.items():
+                if key in metadata:
+                    metadata[key] += value
+                else:
+                    metadata[key] = value
+            metadata["smh_read_path"] = fname
+        return (waves, fluxs, ivars, metadata)
+
+    @classmethod
     def read_multispec(cls, fname, full_output=False):
         """
         There are some files that are not reduced with Dan Kelson's pipeline.
         So we have to read those manually and define ivar
         """
-        print("READ MULTISPEC DWARF CANNON")
+        print("READ MULTISPEC OLD")
         # Hardcoded file with old CarPy format: 5 bands instead of 7
         if "hd13979red_multi_200311ibt" in fname:
             WAT_LENGTH=67
@@ -271,7 +352,10 @@ class Spectrum1D(object):
             #       that issue returns.
 
             if key in metadata:
-                metadata[key] += value
+                try:
+                    metadata[key] += value
+                except:
+                    metadata[key] += str(value)
             else:
                 metadata[key] = value
 
@@ -315,6 +399,7 @@ class Spectrum1D(object):
         is_iraf_3band_product = (md5_hash == "a4d8f6f51a7260fce1642f7b42012969")
         is_apo_product = (image[0].header.get("OBSERVAT", None) == "APO")
         is_dupont_product = (md5_hash == "2ab648afed96dcff5ccd10e5b45730c1")
+        is_mcdonald_product = (image[0].header.get("OBSERVAT", None).strip() == "MCDONALD")
         
         if is_carpy_mike_product or is_carpy_mage_product or is_carpy_mike_product_old or is_dupont_product:
             # CarPy gives a 'noise' spectrum, which we must convert to an
@@ -350,14 +435,26 @@ class Spectrum1D(object):
             flux = image[0].data[flux_ext]
             ivar = image[0].data[noise_ext]**(-2)
 
-        elif is_apo_product:
+        elif is_apo_product or is_mcdonald_product:
             flux_ext = flux_ext or 0
-            default_ivar_ext = 3 if (md5_hash == "9d008ba2c3dc15549fd8ffe8a605ec15") else -1
+
+            if md5_hash == "9d008ba2c3dc15549fd8ffe8a605ec15":
+                default_ivar_ext = 3
+            elif md5_hash == "a4d8f6f51a7260fce1642f7b42012969":
+                default_ivar_ext = 2
+            else:
+                default_ivar_ext = -1
             noise_ext = ivar_ext or default_ivar_ext
 
-            logger.info(
-                "Recognized APO product. Using zero-indexed flux/noise "
-                "extensions (bands) {}/{}".format(flux_ext, noise_ext))
+            if md5_hash == "9d008ba2c3dc15549fd8ffe8a605ec15":
+                logger.info(
+                    "Recognized APO product. Using zero-indexed flux/noise "
+                    "extensions (bands) {}/{}".format(flux_ext, noise_ext))
+            elif md5_hash == "a4d8f6f51a7260fce1642f7b42012969":
+                logger.info(
+                    "Recognized McDonald product. Using zero-indexed flux/noise "
+                    "extensions (bands) {}/{}".format(flux_ext, noise_ext))
+            
             logger.info(
                 image[0].header["BANDID{}".format(flux_ext+1)]
             )
