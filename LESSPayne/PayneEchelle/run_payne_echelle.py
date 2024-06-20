@@ -182,6 +182,7 @@ def run_payne_echelle(cfg):
     popt_best, model_spec_best, chi_square, perr_best = out
     print(f"PayneEchelle Fit Took {time.time()-start2:.1f}")
     popt_print = model.transform_coefficients(popt_best)
+    perr_print = np.abs(model.transform_coefficients(popt_best + perr_best) - popt_print)
     if NNtype == "default":
         print("[Teff [K], logg, Fe/H, Alpha/Fe] = ",\
               int(popt_print[0]*1.)/1.,\
@@ -210,6 +211,7 @@ def run_payne_echelle(cfg):
              popt_best=popt_best,
              perr_best=perr_best,
              popt_print=popt_print,
+             perr_print=perr_print,
              model_spec_best=model_spec_best,
              chi_square=chi_square,
              errors_payne=errors_payne,
