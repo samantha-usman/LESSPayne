@@ -5,7 +5,7 @@ from astropy.stats import biweight_scale
 from LESSPayne.specutils import Spectrum1D
 from LESSPayne.specutils.utils import fast_find_continuum
 from LESSPayne.specutils.rv import quick_measure_mike_velocities
-from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel
+from LESSPayne.PayneEchelle.spectral_model import DefaultPayneModel, YYLiPayneModel
 from LESSPayne.PayneEchelle import plotting
 from LESSPayne.PayneEchelle import utils
 from LESSPayne.PayneEchelle import fitting
@@ -47,6 +47,8 @@ def run_payne_echelle(cfg):
     
     name = cfg["output_name"]
     NNpath = cfg["NN_file"]
+    NNtype = cfg["NN_type"]
+    assert NNtype in ["default", "yyli"], NNtype
     outdir = cfg["output_directory"]
     figdir = cfg["figure_directory"]
     if not os.path.exists(outdir): os.makedirs(outdir)
@@ -64,9 +66,19 @@ def run_payne_echelle(cfg):
     mask_list = pcfg["mask_list"]
     rv_target_wavelengths = pcfg["rv_target_wavelengths"]
     
-    Teff0, logg0, MH0, aFe0 = pcfg["initial_parameters"]["Teff"], pcfg["initial_parameters"]["logg"], \
-        pcfg["initial_parameters"]["MH"], pcfg["initial_parameters"]["aFe"]
-    initial_stellar_labels = [Teff0, logg0, MH0, aFe0]
+    if NNtype == "default":
+        Teff0, logg0, MH0, aFe0 = pcfg["initial_parameters"]["Teff"], pcfg["initial_parameters"]["logg"], \
+            pcfg["initial_parameters"]["MH"], pcfg["initial_parameters"]["aFe"]
+        initial_stellar_labels = [Teff0, logg0, MH0, aFe0]
+    elif NNtype == "yyli":
+        Teff0, logg0, MH0, aFe0 = pcfg["initial_parameters"]["Teff"], pcfg["initial_parameters"]["logg"], \
+            pcfg["initial_parameters"]["MH"], pcfg["initial_parameters"]["aFe"]
+        vt0 = pcfg["initial_parameters"].get("vt", 1.5)
+        CFe0 = pcfg["initial_parameters"].get("CFe", 0.0)
+        MgFe0 = pcfg["initial_parameters"].get("MgFe", aFe0)
+        CaFe0 = pcfg["initial_parameters"].get("CaFe", aFe0)
+        TiFe0 = pcfg["initial_parameters"].get("TiFe", aFe0)
+        initial_stellar_labels = [Teff0, logg0, vt0, MH0, CFe0, MgFe0, CaFe0, TiFe0]
     
     poly_coeff_min = pcfg.get("poly_coeff_min",-1000)
     poly_coeff_max = pcfg.get("poly_coeff_max",1000)
@@ -148,39 +160,66 @@ def run_payne_echelle(cfg):
     print(f"Median RV order wavelength: {np.median(wavelength[iorder]):.1f}")
 
     start2 = time.time()
-    print(f"Running with PayneEchelle ({NNpath})")
-    model = DefaultPayneModel.load(NNpath, num_order=norder)
-    errors_payne = utils.read_default_model_mask(wavelength_payne=model.wavelength_payne)
-    model = DefaultPayneModel.load(NNpath, num_order=norder, errors_payne=errors_payne,
-                                   polynomial_order=polynomial_order)
+    if NNtype == "default":
+        print(f"Running with DefaultPayneModel ({NNpath})")
+        model = DefaultPayneModel.load(NNpath, num_order=norder)
+        errors_payne = utils.read_default_model_mask(wavelength_payne=model.wavelength_payne)
+        model = DefaultPayneModel.load(NNpath, num_order=norder, errors_payne=errors_payne,
+                                       polynomial_order=polynomial_order)
+    elif NNtype == "yyli":
+        print(f"Running with YYLiPayneModel ({NNpath})")
+        model = YYLiPayneModel.load(NNpath, num_order=norder)
+        errors_payne = utils.read_default_model_mask(wavelength_payne=model.wavelength_payne)
+        model = YYLiPayneModel.load(NNpath, num_order=norder, errors_payne=errors_payne,
+                                    polynomial_order=polynomial_order)
+
     print("starting fit")
     out = fitting.fit_global(spectrum, spectrum_err, spectrum_blaze, wavelength,
                              model, initial_stellar_parameters=initial_stellar_labels,
                              RV_array = RV_array, order_choice=[iorder],
-                             poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max)
-    popt_best, model_spec_best, chi_square = out
+                             poly_coeff_min=poly_coeff_min, poly_coeff_max=poly_coeff_max,
+                             get_perr=True)
+    popt_best, model_spec_best, chi_square, perr_best = out
     print(f"PayneEchelle Fit Took {time.time()-start2:.1f}")
     popt_print = model.transform_coefficients(popt_best)
-    print("[Teff [K], logg, Fe/H, Alpha/Fe] = ",\
-          int(popt_print[0]*1.)/1.,\
-          int(popt_print[1]*100.)/100.,\
-          int(popt_print[2]*100.)/100.,\
-          int(popt_print[3]*100.)/100.,\
-             )
-    print("vbroad [km/s] = ", int(popt_print[-2]*10.)/10.)
-    print("RV [km/s] = ", int(popt_print[-1]*10.)/10.)
+    perr_print = np.abs(model.transform_coefficients(popt_best + perr_best) - popt_print)
+    if NNtype == "default":
+        print("[Teff [K], logg, Fe/H, Alpha/Fe] = ",\
+              int(popt_print[0]*1.)/1.,\
+              int(popt_print[1]*100.)/100.,\
+              int(popt_print[2]*100.)/100.,\
+              int(popt_print[3]*100.)/100.,\
+              )
+        print("vbroad [km/s] = ", int(popt_print[-2]*10.)/10.)
+        print("RV [km/s] = ", int(popt_print[-1]*10.)/10.)
+    elif NNtype == "yyli":
+        print("[Teff [K], logg, vt, Fe/H, CFe, MgFe, CaFe, TiFe] = ",\
+              int(popt_print[0]*1.)/1.,\
+              int(popt_print[1]*100.)/100.,\
+              int(popt_print[2]*100.)/100.,\
+              int(popt_print[3]*100.)/100.,\
+              int(popt_print[4]*100.)/100.,\
+              int(popt_print[5]*100.)/100.,\
+              int(popt_print[6]*100.)/100.,\
+              int(popt_print[7]*100.)/100.,\
+              )
+        print("vbroad [km/s] = ", int(popt_print[-2]*10.)/10.)
+        print("RV [km/s] = ", int(popt_print[-1]*10.)/10.)
     print("Chi square = ", chi_square)
     
     np.savez(outfname_bestfit,
              popt_best=popt_best,
+             perr_best=perr_best,
              popt_print=popt_print,
+             perr_print=perr_print,
              model_spec_best=model_spec_best,
              chi_square=chi_square,
              errors_payne=errors_payne,
              wavelength=wavelength,
              spectrum=spectrum,
              spectrum_err=spectrum_err,
-             initial_stellar_labels=initial_stellar_labels)
+             initial_stellar_labels=initial_stellar_labels,
+             NNtype=NNtype, NNpath=NNpath)
     
     if pcfg["save_figures"]:
         plotting.save_figures(name, wavelength, spectrum, spectrum_err, model_spec_best,

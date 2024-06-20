@@ -273,7 +273,11 @@ def plot_synth_grid(session, outfname, name,
     for i, model in enumerate(syn_models):
         ax1 = axes[irow*2,   icol]
         ax2 = axes[irow*2+1, icol]
-        label = f"{utils.species_to_element(model.species[0]).replace(' ','')}{model.wavelength:.0f}"
+        species = model.species
+        for j in range(5):
+            species = species[0]
+            if isinstance(species, float): break
+        label = f"{utils.species_to_element(species).replace(' ','')}{model.wavelength:.0f}"
         
         try:
             plot_model_fit(ax1, session, model, label=label,
