@@ -399,7 +399,7 @@ class Spectrum1D(object):
         is_iraf_3band_product = (md5_hash == "a4d8f6f51a7260fce1642f7b42012969")
         is_apo_product = (image[0].header.get("OBSERVAT", None) == "APO")
         is_dupont_product = (md5_hash == "2ab648afed96dcff5ccd10e5b45730c1")
-        is_mcdonald_product = (image[0].header.get("OBSERVAT", None).strip() == "MCDONALD")
+        is_mcdonald_product = (image[0].header.get("OBSERVAT", "").strip() == "MCDONALD")
         
         if is_carpy_mike_product or is_carpy_mage_product or is_carpy_mike_product_old or is_dupont_product:
             # CarPy gives a 'noise' spectrum, which we must convert to an
