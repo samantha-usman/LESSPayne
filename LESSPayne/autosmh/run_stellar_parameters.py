@@ -125,7 +125,7 @@ def run_stellar_parameters(cfg):
 
     ## Plot
     if spcfg["save_figure_eqw"]:
-        figoutname = os.path.join(figdir, f"{name}_eqw.png")
+        figoutname = os.path.join(figdir, f"{name}_eqw.pdf")
         start = time.time()
         plot_eqw_grid(session, figoutname, name)
         print(f"Time to save eqw figure: {time.time()-start:.1f}")

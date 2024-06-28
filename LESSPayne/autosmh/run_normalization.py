@@ -152,9 +152,7 @@ def get_normalization_keywords(spec, ncfg):
         low_sigma_clip = ncfg.get("lowsnr_low_sigma_clip",2.0)
     else:
         sigma_clip_wave_list = ncfg.get("sigma_clip_wave_list",
-            [(3000, 1000, 1.0, 5.0)])
-        #sigma_clip_wave_list = ncfg.get("sigma_clip_wave_list",
-        #    [(3000, 4600, 1.0, 5.0), (4600, 1000, 0.5, 5.0)])
+            [(3000, 10000, 1.0, 5.0)])
         for (kwave1, kwave2, hiclip, loclip) in sigma_clip_wave_list:
             if (wc > kwave1) & (wc <= kwave2):
                 high_sigma_clip = hiclip
@@ -163,13 +161,6 @@ def get_normalization_keywords(spec, ncfg):
         else:
             high_sigma_clip = 1.0
             low_sigma_clip = 5.0
-        ## the above should implement something like this
-        # if wc > 4600:
-        #     high_sigma_clip = 1.0
-        #     low_sigma_clip = 5.0
-        # else:
-        #     high_sigma_clip = 0.5
-        #     low_sigma_clip = 5.0
     
     return knot_spacing, high_sigma_clip, low_sigma_clip
 

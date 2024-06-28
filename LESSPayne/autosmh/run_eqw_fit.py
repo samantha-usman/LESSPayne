@@ -94,40 +94,54 @@ def run_eqw_fit(cfg):
 
     ## Plot
     if ecfg["save_figure"]:
-        figoutname = os.path.join(figdir, f"{name}_eqw.png")
+        figoutname = os.path.join(figdir, f"{name}_eqw.pdf")
         start = time.time()
         plot_eqw_grid(session, figoutname, name)
         print(f"Time to save figure: {time.time()-start:.1f}")
         
 
 def plot_eqw_grid(session, outfname, name,
-                  Ncol=5, width=6, height=4, dpi=150):
+                  Nrowmax=5, Ncol=4, width=6, height=4, dpi=150):
     import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
     eqw_models = [m for m in session.spectral_models if isinstance(m, ProfileFittingModel)]
-    N = len(eqw_models) + 4
-    Nrow = (N // Ncol) + int(N % Ncol > 0)
-    assert Nrow*Ncol >= N, (Nrow,Ncol,N)
+    N_extra = 4
+    N = len(eqw_models) + N_extra
+    Nmax = Nrowmax * Ncol
     
     ltab = get_line_table(session, True)
     
-    fig, axes = plt.subplots(Nrow, Ncol, figsize=(width*Ncol, height*Nrow))
+    fig, axes = plt.subplots(Nrowmax, Ncol, figsize=(width*Ncol, height*Nrowmax))
     plot_summary_1(axes.flat[0], session, ltab, name)
     plot_summary_2(axes.flat[1], session, ltab)
-    for model, ax in zip(eqw_models, axes.flat[2:]):
-        linewave = model.transitions[0]["wavelength"]
-        label = f"{utils.species_to_element(model.species[0]).replace(' ','')}{model.wavelength:.0f}"
-        try:
-            plot_model_fit(ax, session, model, label=label,
-                           linewave=linewave, inset_dwl=None)
-        except Exception as e:
-            print("Error:",model.species,model.wavelength)
-            print(e)
-            print("Skipping...")
-    plot_fe_trends(axes.flat[-2], session, "expot", ltab)
-    plot_fe_trends(axes.flat[-1], session, "REW", ltab)
-    
-    fig.tight_layout()
-    fig.subplots_adjust(top=.96, wspace=0.15, hspace=.15)
-    fig.suptitle(name, fontsize=30, weight='bold', fontfamily='monospace',color='k')
-    fig.savefig(outfname, dpi=dpi)
-    plt.close(fig)
+    plot_fe_trends(axes.flat[2], session, "expot", ltab)
+    plot_fe_trends(axes.flat[3], session, "REW", ltab)
+    first_figure = 1
+    with PdfPages(outfname) as pdf:
+        def finish_fig(fig):
+            fig.subplots_adjust(top=.97, wspace=0.12, hspace=.12,
+                                bottom=0.02, left=0.03, right=0.99)
+            fig.suptitle(name, fontsize=30, weight='bold', fontfamily='monospace',color='k')
+            pdf.savefig(fig)
+            plt.close(fig)
+            
+            fig, axes = plt.subplots(Nrowmax, Ncol, figsize=(width*Ncol, height*Nrowmax))
+            return fig, axes
+        for i, model in enumerate(eqw_models):
+            iall = i+N_extra
+            if iall % Nmax == 0 and iall > 0:
+                fig, axes = finish_fig(fig)
+                first_figure = 0
+            j = iall % Nmax
+            ax = axes.flat[j]
+            linewave = model.transitions[0]["wavelength"]
+            label = f"{utils.species_to_element(model.species[0]).replace(' ','')}{model.wavelength:.0f}"
+            try:
+                plot_model_fit(ax, session, model, label=label,
+                               linewave=linewave, inset_dwl=None)
+            except Exception as e:
+                print("Error:",i,model.species,model.wavelength)
+                print(e)
+                print("Skipping...")
+        fig, axes = finish_fig(fig)
+        plt.close(fig)
