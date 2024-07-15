@@ -10,7 +10,10 @@ def read_expres(fname, full_output=False, as_arrays=False, as_order_dict=False, 
     tab = Table.read(fname, hdu=1)
     if as_raw_table: return tab
     
-    orders = tab["order"]
+    try:
+        orders = tab["order"]
+    except:
+        orders = tab["orders"]
     cols = ["wavelength", "spectrum", "uncertainty", "continuum",
             "offset","offset_uncertainty","n_pixels","reduced_chi",
             "continuum_mask","pixel_mask","tellurics",
