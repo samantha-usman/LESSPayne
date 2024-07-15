@@ -30,7 +30,7 @@ def read_expres(fname, full_output=False, as_arrays=False, as_order_dict=False, 
     meta = {"file":fname}
     for iord in range(Nord):
         meta["order"] = orders[iord]
-        wave = tab["wavelength"][iord]
+        wave = tab["bary_wavelength"][iord]
         flux = tab["spectrum"][iord]
         errs = tab["uncertainty"][iord]
         if as_arrays:
