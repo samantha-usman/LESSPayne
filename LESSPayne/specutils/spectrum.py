@@ -6,6 +6,7 @@
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 from six import iteritems
+from .read_expres import read_expres as read_expres_func
 
 __all__ = ["Spectrum1D", "stitch", "coadd", "read_mike_spectrum", "write_fits_linear"]
 
@@ -122,6 +123,7 @@ class Spectrum1D(object):
             (cls.read_ceres,"read_ceres"),
             (cls.read_multispec,"read_multispec"),
             (cls.read_ascii_spectrum1d_noivar,"read_ascii_spectrum1d_noivar"),
+            (cls.read_expres,"read_expres"),
         )
 
         for method, name in methods:
@@ -510,6 +512,26 @@ class Spectrum1D(object):
 
         return (dispersion, flux, ivar, metadata)
 
+    @classmethod
+    def read_expres(cls, path, **kwargs):
+        """
+        Read Spectrum1D data from an EXPRES FITS file.
+
+        :param path:
+            The path of the FITS filename to read.
+
+        Other kwargs
+        full_output=False, as_arrays=False, as_order_dict=False, as_raw_table=False
+        (forces as_arrays=True)
+        """
+        
+        meta = {"ALT_OBS":2360, "LAT_OBS":34.744444444, "LONG_OBS":-111.421944444}
+        kwargs["as_arrays"] = True
+        alloutput = read_expres_func(path, **kwargs)
+        dispersion = alloutput[0]
+        flux = alloutput[1]
+        ivar = alloutput[2]**-2
+        return (dispersion, flux, ivar, meta)
 
     @classmethod
     def read_fits_spectrum1d(cls, path, **kwargs):
