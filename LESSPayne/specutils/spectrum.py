@@ -256,7 +256,7 @@ class Spectrum1D(object):
         There are some files that are not reduced with Dan Kelson's pipeline.
         So we have to read those manually and define ivar
         """
-        print("READ MULTISPEC OLD")
+        #print("READ MULTISPEC OLD")
         # Hardcoded file with old CarPy format: 5 bands instead of 7
         if "hd13979red_multi_200311ibt" in fname:
             WAT_LENGTH=67
@@ -267,7 +267,7 @@ class Spectrum1D(object):
             orders = cls.read(fname, WAT_LENGTH=WAT_LENGTH)
             code = 1
         except:
-            print("OLD FORMAT STARTING")
+            #print("OLD FORMAT STARTING")
             # This is the old format: (Norders x Npix) with no noise spec...
             with fits.open(fname) as hdulist:
                 assert len(hdulist)==1, len(hdulist)

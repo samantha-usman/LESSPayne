@@ -110,4 +110,8 @@ run_errors:
   e_MH: 0.1
   save_figure: True
   output_suffix: null
+run_summary:
+  summary_output_dir: null
+  output_suffix: v1
+  quick_no_errors: False
 run_plot:
