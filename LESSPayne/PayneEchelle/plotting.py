@@ -29,26 +29,33 @@ def rgb(r,g,b):
 cb2 = [rgb(31,120,180), rgb(255,127,0), rgb(51,160,44), rgb(227,26,28), \
        rgb(10,10,10), rgb(253,191,111), rgb(178,223,138), rgb(251,154,153)]
 
-rcParams['figure.figsize'] = (11,7.5)
-rcParams['figure.dpi'] = 300
+from copy import deepcopy
 
-rcParams['lines.linewidth'] = 1
+default_rcParams = deepcopy(rcParams)
 
-rcParams['axes.prop_cycle'] = cycler('color', cb2)
-rcParams['axes.facecolor'] = 'white'
-rcParams['axes.grid'] = False
+def update_rcParams():
+    rcParams['figure.figsize'] = (11,7.5)
+    rcParams['font.family'] = 'Bitstream Vera Sans' 
+    rcParams['font.size'] = 25
+    rcParams['font.weight'] = 300
+    
+    rcParams['axes.prop_cycle'] = cycler('color', cb2)
+    rcParams['axes.facecolor'] = 'white'
+    rcParams['axes.grid'] = False
+    rcParams['lines.linewidth'] = 1
+    rcParams['patch.facecolor'] = cb2[0]
+    rcParams['patch.edgecolor'] = 'white'
 
-rcParams['patch.facecolor'] = cb2[0]
-rcParams['patch.edgecolor'] = 'white'
-
-rcParams['font.family'] = 'Bitstream Vera Sans' 
-rcParams['font.size'] = 25
-rcParams['font.weight'] = 300
+def reset_rcParams():
+    rcParams = default_rcParams
 
 def save_figures(name, wavelength, spectrum, spectrum_err, model_spec_best,
                  errors_payne=None, popt_best=None, model=None,
                  outdir=".", outfname_format="korder"):
     assert outfname_format in ["korder","wave"], outfname_format
+    update_rcParams()
+    rcParams['figure.dpi'] = 300
+    
     model_errs = np.zeros(wavelength.shape)
     if (errors_payne is not None) and (popt_best is not None):
         #NN_coeffs, wavelength_payne = utils.read_in_neural_network()
@@ -123,6 +130,7 @@ def save_figures(name, wavelength, spectrum, spectrum_err, model_spec_best,
             roundwave = 10 * int(np.median(wavelength[k,:]) // 10)
             plt.savefig("{}/{}_Order_{:02}_{}A.pdf".format(outdir, name, k+1, roundwave))
         plt.close()
+    reset_rcParams()
 
 def save_figures_multipdf(name, wavelength, spectrum, spectrum_err, model_spec_best,
                           errors_payne=None, popt_best=None, model=None,
