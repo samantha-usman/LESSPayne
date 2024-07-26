@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function # python2 compatibility
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 
 from . import spectral_model
 from . import utils
