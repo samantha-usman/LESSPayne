@@ -222,9 +222,9 @@ def run_payne_echelle(cfg):
              NNtype=NNtype, NNpath=NNpath)
     
     if pcfg["save_figures"]:
-        plotting.save_figures(name, wavelength, spectrum, spectrum_err, model_spec_best,
-                              errors_payne=errors_payne, popt_best=popt_best, model=model,
-                              outdir=figdir, outfname_format="wave")
+        plotting.save_figures_multipdf(name, wavelength, spectrum, spectrum_err, model_spec_best,
+                                       errors_payne=errors_payne, popt_best=popt_best, model=model,
+                                       outdir=figdir)
     
     print(f"TOTAL TIME: {time.time()-start:.1f}")
     
