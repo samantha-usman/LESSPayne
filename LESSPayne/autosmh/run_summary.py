@@ -2,7 +2,11 @@ import numpy as np
 import sys, os, time
 import yaml
 from copy import deepcopy
+from collections import Counter, OrderedDict
 from scipy.ndimage import gaussian_filter1d
+from scipy import stats, integrate, optimize
+import astropy.table
+from astropy.stats import biweight_scale, biweight_location
 
 from LESSPayne.smh import Session
 
@@ -346,10 +350,127 @@ def get_fullerrors_lines(session, minerr=0.001, default_esys=0.1, estimate_syste
         tab[col].format = ".3f"
     return tab
 
-def get_fullerrors_summary(tab):
+def get_fullerrors_summary(tab, use_weighted_abundances_for_XH_XFe=True, XFe_type=1):
     """
     Take a table of lines and turn them into standard abundance table
     """
     from LESSPayne.smh.spectral_models import ProfileFittingModel, SpectralSynthesisModel
+    from LESSPayne.smh.photospheres.abundances import asplund_2009 as solar_composition
     
-    return None
+    assert XFe_type in [1, 2, "ion"], XFe_type
+
+    unique_species = np.unique(tab["species"])
+    cols = ["species","elem","N",
+            "logeps","sigma","stderr",
+            "logeps_w","sigma_w","stderr_w",
+            "e_Teff","e_logg","e_vt","e_MH","e_sys",
+            "e_Teff_w","e_logg_w","e_vt_w","e_MH_w","e_sys_w",
+            "[X/H]","e_XH","s_X"]
+    data = OrderedDict(zip(cols, [[] for col in cols]))
+    for species in unique_species:
+        ttab = tab[tab["species"]==species]
+        elem = species_to_element(species)
+        N = len(ttab)
+        logeps = np.mean(ttab["logeps"])
+        stdev = np.std(ttab["logeps"])
+        stderr = stdev/np.sqrt(N)
+        
+        w = ttab["weight"]
+        finite = np.isfinite(w)
+        if finite.sum() != N:
+            print("WARNING: species {:.1f} N={} != finite weights {}".format(species, N, finite.sum()))
+        x = ttab["logeps"]
+        logeps_w = np.sum(w*x)/np.sum(w)
+        stdev_w = np.sqrt(np.sum(w*(x-logeps_w)**2)/np.sum(w))
+        stderr_w = np.sqrt(1/np.sum(w))
+        
+        sperrs = []
+        sperrs_w = []
+        for spcol in ["Teff","logg","vt","MH"]:
+            x_new = x + ttab["e_"+spcol]
+            e_sp = np.mean(x_new) - logeps
+            sperrs.append(e_sp)
+            
+            e_sp_w = np.sum(w*x_new)/np.sum(w) - logeps_w
+            #e_sp_w = np.sum(w*ttab["e_"+spcol])/np.sum(w)
+            sperrs_w.append(e_sp_w)
+        sperrs = np.array(sperrs)
+        sperrs_w = np.array(sperrs_w)
+        sperrtot = np.sqrt(np.sum(sperrs**2, axis=1))
+        sperrtot_w = np.sqrt(np.sum(sperrs_w**2, axis=1))
+        
+        if use_weighted_abundances_for_XH_XFe:
+            XH = logeps_w - solar_composition(species)
+            e_XH = np.sqrt(stdev_w**2 + stderr_w**2 + sperrtot_w**2)
+        else:
+            XH = logeps - solar_composition(species)
+            e_XH = np.sqrt(stdev**2 + stderr**2 + sperrtot**2)
+        s_X = ttab["e_sys"][0]
+        assert np.allclose(ttab["e_sys"], s_X), s_X
+        input_data = [species, elem, N,
+                      logeps, stdev, stderr,
+                      logeps_w, stdev_w, stderr_w,
+                      sperrs[0], sperrs[1], sperrs[2], sperrs[3], sperrtot,
+                      sperrs_w[0], sperrs_w[1], sperrs_w[2], sperrs_w[3], sperrtot_w,
+                      XH, e_XH, s_X
+        ]
+        assert len(cols) == len(input_data)
+        for col, x in zip(cols, input_data):
+            data[col].append(x)
+    summary_tab = astropy.table.Table(data)
+
+    # TODO THIS IS BROKEN
+    # NEED TO FIGURE OUT THE COVARIANCES HERE
+    varXH = summary_tab["e_XH"]**2.
+    try:
+        ix1 = np.where(summary_tab["species"]==26.0)[0][0]
+    except IndexError:
+        feh1 = exfe1 = np.nan
+    else:
+        feh1 = summary_tab["[X/H]"][ix1]
+        varfe1 = summary_tab["e_XH"][ix1]**2.
+        var_fe1 = var_X[ix1]
+        # Var(X/Fe1) = Var(X) + Var(Fe1) - 2*Cov(X,Fe1)
+        exfe1 = np.sqrt(var_X + var_fe1 - 2*cov_XY[ix1,:])
+    try:
+        ix2 = np.where(summary_tab["species"]==26.1)[0][0]
+    except IndexError:
+        print("No feh2: setting to feh1")
+        feh2 = feh1
+        try:
+            exfe2 = exfe1
+        except UnboundLocalError: # no ix1 either
+            exfe2 = np.nan
+    else:
+        feh2 = summary_tab["[X/H]"][ix2]
+        var_fe2 = var_X[ix2]
+        # Var(X/Fe2) = Var(X) + Var(Fe2) - 2*Cov(X,Fe2)
+        exfe2 = np.sqrt(var_X + var_fe2 - 2*cov_XY[ix2,:])
+        
+    feh1, efe1, feh2, efe2 = TODO
+    
+    if len(summary_tab["[X/H]"]) > 0:
+        summary_tab["[X/Fe1]"] = summary_tab["[X/H]"] - feh1
+        summary_tab["e_XFe1"] = exfe1
+        summary_tab["[X/Fe2]"] = summary_tab["[X/H]"] - feh2
+        summary_tab["e_XFe2"] = exfe2
+
+        if XFe_type == 1:
+            summary_tab["[X/Fe]"] = summary_tab["[X/Fe1]"]
+            summary_tab["e_XFe"] = summary_tab["e_XFe1"]
+        elif XFe_type == 2:
+            summary_tab["[X/Fe]"] = summary_tab["[X/Fe2]"]
+            summary_tab["e_XFe"] = summary_tab["e_XFe2"]
+        elif XFe_type == "ion":
+            ixion = np.array([x - int(x) > .01 for x in summary_tab["species"]])
+            summary_tab["[X/Fe]"] = summary_tab["[X/Fe1]"]
+            summary_tab["e_XFe"] = summary_tab["e_XFe1"]
+            summary_tab["[X/Fe]"][ixion] = summary_tab["[X/Fe2]"][ixion]
+            summary_tab["e_XFe"][ixion] = summary_tab["e_XFe2"][ixion]
+        else:
+            raise ValueError(XFe_type)
+        for col in ["[X/Fe]","[X/Fe1]","[X/Fe2]",
+                    "e_XFe","e_XFe1","e_XFe2"]:
+            summary_tab.add_column(astropy.table.Column(np.zeros(0),col))
+    
+    return summary_tab
