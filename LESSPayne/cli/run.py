@@ -8,7 +8,7 @@ from LESSPayne.autosmh.run_eqw_fit import run_eqw_fit
 from LESSPayne.autosmh.run_stellar_parameters import run_stellar_parameters
 from LESSPayne.autosmh.run_synth_fit import run_synth_fit
 from LESSPayne.autosmh.run_errors import run_errors
-#from LESSPayne.autosmh.run_summary import run_summary
+from LESSPayne.autosmh.run_summary import run_summary
 
 
 if __name__=="__main__":
@@ -104,6 +104,12 @@ if __name__=="__main__":
     # Optional output: 
     if options.run_errors:
         run_errors(cfg)
+
+    ## Summary
+    # Input: SMHR file with all abundances done
+    # Output: line and abundance tables
+    if options.run_summary:
+        run_summary(cfg)
 
     print(f"Time to run LESSPayne: {time.time()-start:.1f}")
     
