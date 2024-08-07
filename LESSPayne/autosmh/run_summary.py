@@ -77,7 +77,7 @@ def get_quick_lines(session):
             print("ERROR!!!")
             print(i, species, model.wavelength)
             print("Exception:",e)
-            logeps, staterr, e_Teff, e_logg, e_vt, e_MH, syserr = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+            logeps, staterr, e_Teff, e_logg, e_vt, e_MH = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
         if isinstance(model, ProfileFittingModel):
             eqw = model.equivalent_width or np.nan
@@ -263,14 +263,12 @@ def get_fullerrors_lines(session, minerr=0.001, default_esys=0.1, estimate_syste
             e_vt = sperrdict["microturbulence"]
             e_MH = sperrdict["metallicity"]
             e_all = np.array([e_Teff, e_logg, e_vt, e_MH])
-            syserr_sq = e_all.T.dot(rhomat.dot(e_all))
-            syserr = np.sqrt(syserr_sq)
             fwhm = model.fwhm
         except Exception as e:
             print("ERROR!!!")
             print(i, species, model.wavelength)
             print("Exception:",e)
-            logeps, staterr, e_Teff, e_logg, e_vt, e_MH, syserr = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+            logeps, staterr, e_Teff, e_logg, e_vt, e_MH, fwhm = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
         if isinstance(model, ProfileFittingModel):
             eqw = model.equivalent_width or np.nan
@@ -278,10 +276,9 @@ def get_fullerrors_lines(session, minerr=0.001, default_esys=0.1, estimate_syste
         else:
             eqw = -999
             e_eqw = -999
-        #toterr = np.sqrt(staterr**2 + syserr**2)
         input_data = [i, wavelength, species, expot, loggf,
                       logeps, staterr, eqw, e_eqw, fwhm,
-                      e_Teff, e_logg, e_vt, e_MH, syserr,
+                      e_Teff, e_logg, e_vt, e_MH, np.nan,
                       np.nan, np.nan]
         for col, x in zip(cols, input_data):
             data[col].append(x)
@@ -350,6 +347,7 @@ def get_fullerrors_lines(session, minerr=0.001, default_esys=0.1, estimate_syste
 
     for col in tab.colnames:
         if col in ["index", "wavelength", "species", "loggf", "star"]: continue
+        if col in ["fwhm"]: tab[col].format = ".2f"; continue
         tab[col].format = ".3f"
     return tab
 
@@ -366,8 +364,8 @@ def get_fullerrors_summary(tab, use_weighted_abundances_for_XH_XFe=True, XFe_typ
     cols = ["species","elem","N",
             "logeps","sigma","stderr",
             "logeps_w","sigma_w","stderr_w",
-            "e_Teff","e_logg","e_vt","e_MH","e_sys",
-            "e_Teff_w","e_logg_w","e_vt_w","e_MH_w","e_sys_w",
+            "e_Teff","e_logg","e_vt","e_MH","e_allsp",
+            "e_Teff_w","e_logg_w","e_vt_w","e_MH_w","e_allsp_w",
             "[X/H]","e_XH","s_X"]
     data = OrderedDict(zip(cols, [[] for col in cols]))
     for species in unique_species:
@@ -390,26 +388,22 @@ def get_fullerrors_summary(tab, use_weighted_abundances_for_XH_XFe=True, XFe_typ
         sperrs = []
         sperrs_w = []
         for spcol in ["Teff","logg","vt","MH"]:
-            x_new = x + ttab["e_"+spcol]
-            e_sp = np.mean(x_new) - logeps
+            e_sp = np.mean(ttab["e_"+spcol])
             sperrs.append(e_sp)
             
-            e_sp_w = np.sum(w*x_new)/np.sum(w) - logeps_w
-            #e_sp_w = np.sum(w*ttab["e_"+spcol])/np.sum(w)
+            e_sp_w = np.sum(w*ttab["e_"+spcol])/np.sum(w)
             sperrs_w.append(e_sp_w)
         sperrs = np.array(sperrs)
         sperrs_w = np.array(sperrs_w)
-        sperrtot = np.sqrt(np.sum(sperrs**2, axis=1))
-        sperrtot_w = np.sqrt(np.sum(sperrs_w**2, axis=1))
+        sperrtot = np.sqrt(np.sum(sperrs**2))
+        sperrtot_w = np.sqrt(np.sum(sperrs_w**2))
         
         if use_weighted_abundances_for_XH_XFe:
             XH = logeps_w - solar_composition(species)
             e_XH = np.sqrt(stdev_w**2 + stderr_w**2 + sperrtot_w**2)
-            var_X_stat = stdev_w**2 + stderr_w**2
         else:
             XH = logeps - solar_composition(species)
             e_XH = np.sqrt(stdev**2 + stderr**2 + sperrtot**2)
-            var_X_stat = stdev**2 + stderr**2
         s_X = ttab["e_sys"][0]
         assert np.allclose(ttab["e_sys"], s_X), s_X
         input_data = [species, elem, N,
@@ -427,8 +421,10 @@ def get_fullerrors_summary(tab, use_weighted_abundances_for_XH_XFe=True, XFe_typ
     ## [X/Fe] errors need to be calculated canceling out stellar parameter uncertainties
     if use_weighted_abundances_for_XH_XFe:
         delta_XY_0 = struct2array(np.array(summary_tab["e_Teff_w","e_logg_w","e_vt_w","e_MH_w"]))
+        var_X_stat = summary_tab["sigma_w"]**2 + summary_tab["stderr_w"]**2
     else:
         delta_XY_0 = struct2array(np.array(summary_tab["e_Teff","e_logg","e_vt","e_MH"]))
+        var_X_stat = summary_tab["sigma"]**2
     
     try:
         ix1 = np.where(summary_tab["species"]==26.0)[0][0]
@@ -438,8 +434,10 @@ def get_fullerrors_summary(tab, use_weighted_abundances_for_XH_XFe=True, XFe_typ
     else:
         feh1 = summary_tab["[X/H]"][ix1]
         delta_XY = delta_XY_0 - delta_XY_0[ix1,:]
-        e2_sys = np.sqrt(np.sum(delta_XY**2, axis=1))
-        exfe1 = np.sqrt(var_X_stat + e2_sys)
+        e2_sys = np.sum(delta_XY**2, axis=1)
+        var_feh1_stat = var_X_stat[ix1]
+        exfe1 = np.sqrt(var_X_stat + var_feh1_stat + e2_sys)
+        exfe1[ix1] = exfe1[ix1] - var_feh1_stat
     
     try:
         ix2 = np.where(summary_tab["species"]==26.1)[0][0]
@@ -452,8 +450,10 @@ def get_fullerrors_summary(tab, use_weighted_abundances_for_XH_XFe=True, XFe_typ
     else:
         feh2 = summary_tab["[X/H]"][ix2]
         delta_XY = delta_XY_0 - delta_XY_0[ix2,:]
-        e2_sys = np.sqrt(np.sum(delta_XY**2, axis=1))
-        exfe2 = np.sqrt(var_X_stat + e2_sys)
+        e2_sys = np.sum(delta_XY**2, axis=1)
+        var_feh2_stat = var_X_stat[ix2]
+        exfe2 = np.sqrt(var_X_stat + var_feh2_stat + e2_sys)
+        exfe2[ix2] = exfe2[ix2] - var_feh2_stat
     
     ## Final summaries
     if len(summary_tab["[X/H]"]) > 0:
@@ -530,8 +530,8 @@ def get_fullerrors_limits(session, tab, summary_tab, XFe_type=1):
     cols = ["species","elem","N",
             "logeps","sigma","stderr",
             "logeps_w","sigma_w","stderr_w",
-            "e_Teff","e_logg","e_vt","e_MH","e_sys",
-            "e_Teff_w","e_logg_w","e_vt_w","e_MH_w","e_sys_w",
+            "e_Teff","e_logg","e_vt","e_MH","e_allsp",
+            "e_Teff_w","e_logg_w","e_vt_w","e_MH_w","e_allsp_w",
             "[X/H]","e_XH","s_X"] + ["[X/Fe1]","e_XFe1","[X/Fe2]","e_XFe2","[X/Fe]","e_XFe"]
     assert len(cols)==len(summary_tab.colnames)
     data = OrderedDict(zip(cols, [[] for col in cols]))
@@ -566,3 +566,10 @@ def get_fullerrors_limits(session, tab, summary_tab, XFe_type=1):
             summary_tab = summary_tab_ul
 
     return tab, summary_tab
+
+def struct2array(x):
+    """ Convert numpy structured array of simple type to normal numpy array """
+    Ncol = len(x.dtype)
+    type = x.dtype[0].type
+    assert np.all([x.dtype[i].type == type for i in range(Ncol)])
+    return x.view(type).reshape((-1,Ncol))
