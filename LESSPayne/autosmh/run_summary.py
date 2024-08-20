@@ -77,7 +77,7 @@ def get_quick_lines(session):
             print("ERROR!!!")
             print(i, species, model.wavelength)
             print("Exception:",e)
-            logeps, staterr, e_Teff, e_logg, e_vt, e_MH = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+            logeps, staterr, e_Teff, e_logg, e_vt, e_MH, fwhm = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
         if isinstance(model, ProfileFittingModel):
             eqw = model.equivalent_width or np.nan
