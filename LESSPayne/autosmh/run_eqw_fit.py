@@ -85,7 +85,7 @@ def run_eqw_fit(cfg):
             print(f"Removed {num_removed}/{len(session.spectral_models)} lines with FWHM > {max_fwhm}")
     else:
         session.apply_spectral_model_quality_control(max_fwhm=max_fwhm, max_redchi2=4,
-                                                     max_slope_sigma=2.5, max_slope_sigma=0.0001,
+                                                     max_slope_sigma=2.5, max_ok_slope=0.0001,
                                                      set_user_flag=True)
     
     notes = f"run_eqw_fit:\n  {linelist_fname}"
