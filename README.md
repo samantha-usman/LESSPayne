@@ -50,9 +50,13 @@ Once this works, it is recommended you update your shell configuration to launch
 alias runsmhr='conda activate lesspayne; cd ~/LESSPayne/LESSPayne/smh/gui; pythonw __main__.py'
 ```
 
-* Install moog17scat (see below) and add it to your path.
+* Compile moog17scat (see below) and add it to your path. For example, edit your `.bash_profile` with this line:
+```
+export PATH=/path/to/moog17scat:$PATH
+```
+Then when you type `which MOOGSILENT` it should return the path to the relevant location.
 
-* Some installation notes for Linux/Debian. It takes a very long time to install pyside2 (hours?) so be patient. Thanks to Shivani Shah and Terese Hansen for this information.
+* Some installation notes for Linux/Debian: the same process works but it takes a very long time to install pyside2 (hours?) so be patient. Thanks to Shivani Shah and Terese Hansen for this information.
 
 MOOG
 ----
